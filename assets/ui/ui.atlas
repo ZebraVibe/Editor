@@ -1,0 +1,160 @@
+
+ui.png
+size: 256, 64
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+arrow_down
+  rotate: false
+  xy: 166, 35
+  size: 9, 9
+  orig: 9, 9
+  offset: 0, 0
+  index: -1
+arrow_down_white
+  rotate: false
+  xy: 78, 15
+  size: 9, 9
+  orig: 9, 9
+  offset: 0, 0
+  index: -1
+arrow_right
+  rotate: false
+  xy: 89, 15
+  size: 9, 9
+  orig: 9, 9
+  offset: 0, 0
+  index: -1
+arrow_right_white
+  rotate: false
+  xy: 106, 23
+  size: 9, 9
+  orig: 9, 9
+  offset: 0, 0
+  index: -1
+audio_icon
+  rotate: false
+  xy: 2, 26
+  size: 24, 36
+  orig: 24, 36
+  offset: 0, 0
+  index: -1
+background
+  rotate: false
+  xy: 248, 52
+  size: 2, 2
+  orig: 2, 2
+  offset: 0, 0
+  index: -1
+canvas2
+  rotate: false
+  xy: 252, 52
+  size: 2, 2
+  orig: 2, 2
+  offset: 0, 0
+  index: -1
+checkbox_checked
+  rotate: false
+  xy: 184, 48
+  size: 14, 14
+  orig: 14, 14
+  offset: 0, 0
+  index: -1
+checkbox_unchecked
+  rotate: false
+  xy: 200, 48
+  size: 14, 14
+  orig: 14, 14
+  offset: 0, 0
+  index: -1
+file_icon
+  rotate: false
+  xy: 28, 26
+  size: 24, 36
+  orig: 24, 36
+  offset: 0, 0
+  index: -1
+folder_big
+  rotate: false
+  xy: 2, 2
+  size: 32, 22
+  orig: 32, 22
+  offset: 0, 0
+  index: -1
+folder_open_small
+  rotate: false
+  xy: 36, 12
+  size: 20, 12
+  orig: 20, 12
+  offset: 0, 0
+  index: -1
+folder_small
+  rotate: false
+  xy: 58, 12
+  size: 18, 12
+  orig: 18, 12
+  offset: 0, 0
+  index: -1
+font_icon
+  rotate: false
+  xy: 54, 26
+  size: 24, 36
+  orig: 24, 36
+  offset: 0, 0
+  index: -1
+game_object_icon
+  rotate: false
+  xy: 216, 48
+  size: 14, 14
+  orig: 14, 14
+  offset: 0, 0
+  index: -1
+game_object_icon_big
+  rotate: false
+  xy: 106, 34
+  size: 28, 28
+  orig: 28, 28
+  offset: 0, 0
+  index: -1
+pane
+  rotate: false
+  xy: 248, 56
+  size: 6, 6
+  orig: 6, 6
+  offset: 0, 0
+  index: -1
+pane2
+  rotate: false
+  xy: 166, 46
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+scene_file_icon
+  rotate: false
+  xy: 80, 26
+  size: 24, 36
+  orig: 24, 36
+  offset: 0, 0
+  index: -1
+scene_icon
+  rotate: false
+  xy: 232, 48
+  size: 14, 14
+  orig: 14, 14
+  offset: 0, 0
+  index: -1
+scene_icon_big
+  rotate: false
+  xy: 136, 34
+  size: 28, 28
+  orig: 28, 28
+  offset: 0, 0
+  index: -1
+scroll_knob
+  rotate: false
+  xy: 36, 5
+  size: 5, 5
+  orig: 5, 5
+  offset: 0, 0
+  index: -1

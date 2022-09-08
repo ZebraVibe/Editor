@@ -1,31 +1,79 @@
 package com.sk.editor;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Logger;
+import com.badlogic.gdx.utils.Null;
+import com.sk.editor.screens.EditorScreen;
+import com.sk.editor.screens.LoadingScreen;
 //
-public class Editor extends ApplicationAdapter {
-	SpriteBatch batch;
-	Texture img;
+public class Editor extends Game {
+	
+	private static final Logger log = new Logger(Editor.class.toString(), Logger.DEBUG);
+	
+	private SpriteBatch batch;
+	private AssetManager assets;
+	private ShapeRenderer renderer;
+	private Screen nextScreen;
 	
 	@Override
 	public void create () {
+		log.debug("Creating Application");
 		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
+		assets = new AssetManager();
+		renderer = new ShapeRenderer();
+		
+		Gdx.app.setLogLevel(Logger.DEBUG);
+		setScreen(new LoadingScreen(this));
 	}
 
 	@Override
 	public void render () {
-		ScreenUtils.clear(1, 0, 0, 1);
-		batch.begin();
-		batch.draw(img, 0, 0);
-		batch.end();
+		super.render();
+		
+		if(nextScreen != null) {
+			super.setScreen(nextScreen);
+			nextScreen = null;
+		}
 	}
 	
 	@Override
 	public void dispose () {
+		log.debug("Disposing Application");
+		super.dispose();
 		batch.dispose();
-		img.dispose();
+		assets.dispose();
+		renderer.dispose();
 	}
+	
+	public AssetManager getAssetManager() {
+		return assets;
+	}
+	
+	public SpriteBatch getBatch() {
+		return batch;
+	}
+	
+	public ShapeRenderer getShapeRenderer() {
+		return renderer;
+	}
+	
+	@Override
+	public void setScreen(Screen screen) {
+		nextScreen = screen;
+	}
+	
+	/** @return Maybe null */
+	public @Null EditorScreen getEditorScreenIfActive() {
+		return isEditorScreenActive() ? (EditorScreen)this.screen : null;
+	}
+	
+	public boolean isEditorScreenActive() {
+		return this.screen instanceof EditorScreen;
+	}
+	
 }
