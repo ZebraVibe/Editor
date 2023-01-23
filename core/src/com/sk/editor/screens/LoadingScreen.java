@@ -4,6 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -29,12 +32,13 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.Editor;
 import com.sk.editor.assets.AssetDescriptors;
+import com.sk.editor.assets.RegionNames;
 
 
 public class LoadingScreen extends ScreenAdapter {
 
 	private static final Logger log = new Logger(LoadingScreen.class.getSimpleName(), Logger.DEBUG);
-	public static final int LOADING_BAR_WIDTH = 128, LOADING_BAR_HEIGHT = 32; // units
+	private static final int LOADING_BAR_WIDTH = 128, LOADING_BAR_HEIGHT = 32; // units
 
 	private Editor editor;
 	private AssetManager assets;
@@ -43,6 +47,7 @@ public class LoadingScreen extends ScreenAdapter {
 	private float waitSecAfterLoading = 1;
 
 	public LoadingScreen(Editor editor) {
+		this.editor = editor;
 		this.assets = editor.getAssetManager();
 		this.renderer = editor.getShapeRenderer();
 	}
@@ -96,7 +101,7 @@ public class LoadingScreen extends ScreenAdapter {
 
 	@Override
 	public void dispose() {
-		
+
 	}
 
 }

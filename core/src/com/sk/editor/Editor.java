@@ -14,7 +14,6 @@ import com.sk.editor.screens.LoadingScreen;
 public class Editor extends Game {
 	
 	private static final Logger log = new Logger(Editor.class.toString(), Logger.DEBUG);
-	
 	private SpriteBatch batch;
 	private AssetManager assets;
 	private ShapeRenderer renderer;
