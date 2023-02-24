@@ -17,6 +17,19 @@ public class Config {
 			GREEN = ColorConverter.hexToRGBA8888(0x65ff00);
 
 
+	public static final float DEFAULT_UI_PAD = 8;
+
+	public static final String CLASS_PATH_DIR_NAME = "compiledClasses";
+
+
+	// -- preferences --
+	public static final String SOURCE_PATH_PREFS_KEY = "srcPath";
+	public static final String CLASS_PATH_PREFS_KEY = "classPath";
+
+	public static final String PACKAGE_NAME_PREFS_KEY = "packageName";
+
+
+
 	private Config() {}
 	
 }

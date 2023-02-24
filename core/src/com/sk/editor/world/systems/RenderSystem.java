@@ -6,7 +6,6 @@ import com.artemis.annotations.All;
 import com.artemis.utils.IntBag;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.sk.editor.ui.ECSHandler;
 import com.sk.editor.world.components.Image;
 import com.sk.editor.world.components.Transform;
 
@@ -34,6 +33,7 @@ public class RenderSystem extends BaseEntitySystem {
 			ScreenUtils.clear(0,0,0,1);
 			batch.begin();
 		} else batch.flush();
+		batch.setColor(1,1,1,1);
 
 		// draw entities
 		for (int i = 0, s = actives.size(); s > i; i++) {

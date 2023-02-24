@@ -4,13 +4,14 @@ import com.artemis.World;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.sk.editor.ecs.ECSManager;
 
 public class ECSProcessingActor extends Table {
 
-    private ECSHandler ecsHandler;
+    private ECSManager ecsManager;
 
-    public ECSProcessingActor(ECSHandler ecsHandler){
-        this.ecsHandler = ecsHandler;
+    public ECSProcessingActor(ECSManager ecsManager){
+        this.ecsManager = ecsManager;
     }
 
     @Override
@@ -18,7 +19,7 @@ public class ECSProcessingActor extends Table {
         super.draw(batch, parentAlpha);
         batch.flush();
 
-        World world = ecsHandler.getWorld();
+        World world = ecsManager.getWorld();
 
         // render world
         world.setDelta(Gdx.graphics.getDeltaTime());

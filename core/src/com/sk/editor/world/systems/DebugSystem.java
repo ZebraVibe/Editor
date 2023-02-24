@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.config.Config;
-import com.sk.editor.ui.ECSHandler;
+import com.sk.editor.ecs.ECSManager;
 import com.sk.editor.world.components.Transform;
 
 @All(Transform.class)
@@ -24,15 +24,15 @@ public class DebugSystem extends BaseEntitySystem {
 
     private ShapeRenderer renderer;
     private Viewport viewport;
-    private ECSHandler ecsHandler;
+    private ECSManager ecsManager;
 
 
     public boolean debug = true;
 
-    public DebugSystem(ShapeRenderer renderer, Viewport viewport, ECSHandler ecsHandler) {
+    public DebugSystem(ShapeRenderer renderer, Viewport viewport, ECSManager ecsManager) {
         this.renderer = renderer;
         this.viewport = viewport;
-        this.ecsHandler = ecsHandler;
+        this.ecsManager = ecsManager;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class DebugSystem extends BaseEntitySystem {
         Transform transform = transformMapper.getSafe(entityId, null);
         if (transform == null) return;
 
-        Entity selected = ecsHandler.getSelectedEntity();
+        Entity selected = ecsManager.getSelectedEntity();
         // set debug color
         if (selected != null && entityId == selected.getId()){
             renderer.setColor(SELECTED_COLOR);

@@ -1,4 +1,4 @@
-package com.sk.editor.ui;
+package com.sk.editor.ui.old;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -12,16 +12,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class CameraActor extends Table {
+public class CameraActorOld extends Table {
 
-    private static final Logger log = new Logger(CameraActor.class.toString(), Logger.DEBUG);
+    private static final Logger log = new Logger(CameraActorOld.class.toString(), Logger.DEBUG);
     private final int RIGHT_MOUSE_BUTTON = Input.Buttons.RIGHT;
     private OrthographicCamera camera;
     private Viewport sceneViewport;
 
     private float lastMouseX, lastMouseY;
 
-    public CameraActor(Viewport sceneViewport){
+    public CameraActorOld(Viewport sceneViewport){
         this.sceneViewport = sceneViewport;
         this.camera = (OrthographicCamera)(sceneViewport.getCamera());
         initListeners();
@@ -101,7 +101,7 @@ public class CameraActor extends Table {
 
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                event.getStage().setScrollFocus(CameraActor.this);
+                event.getStage().setScrollFocus(CameraActorOld.this);
             }
         };
         addListener(cameraListener);

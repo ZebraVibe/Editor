@@ -8,35 +8,29 @@ public class RegionNames {
 	
 	// editor
 	public static final String
+	WHITE_PIXEL = "white_pixel",
 
-	CANVAS = "background",
-	CANVAS2 = "canvas2",
-	SCROLL_KNOB = "scroll_knob",
-	
-	ARROW_RIGHT = "arrow_right",
-	ARROW_DOWN = "arrow_down",
-	
+	GRID = "grid",
+
 	ARROW_RIGHT_WHITE = "arrow_right_white",
 	ARROW_DOWN_WHITE = "arrow_down_white",
-	
+
+	CHECKED_ICON = "checked_icon",
 	CHECK_BOX_CHECKED = "checkbox_checked",
 	CHECK_BOX_UNCHECKED = "checkbox_unchecked",
 	
-	ENTITY_ICON = "game_object_icon",
-	ENTITY_ICON_BIG = "game_object_icon_big",
+	ENTITY_ICON = "entity_icon",
+	ENTITY_ICON_BIG = "entity_icon_big",
 	SCENE_ICON = "scene_icon",
 	SCENE_ICON_BIG = "scene_icon_big",
 	FOLDER_SMALL = "folder_small",
 	FOLDER_OPEN_SMALL = "folder_open_small",
 	FOLDER_BIG = "folder_big",
 	
-	SCENE_FILE_ICON = "scene_file_icon",
-	FILE_ICON = "file_icon",
-	FONT_ICON = "font_icon",
-	AUDIO_ICON = "audio_icon",
-	
-	PANE = "pane",
-	PANE2 = "pane2";
+	FILE = "file",
+	FONT_FILE = "font_file",
+	AUDIO_FILE = "audio_file",
+	SCENE_FILE = "scene_file";
 
 	
 	

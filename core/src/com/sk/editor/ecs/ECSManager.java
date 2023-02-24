@@ -1,12 +1,9 @@
-package com.sk.editor.ui;
+package com.sk.editor.ecs;
 
 import com.artemis.*;
+import com.artemis.injection.CachedInjector;
+import com.artemis.injection.Injector;
 import com.artemis.utils.IntBag;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.Editor;
@@ -14,7 +11,7 @@ import com.sk.editor.world.components.Transform;
 import com.sk.editor.world.systems.DebugSystem;
 import com.sk.editor.world.systems.RenderSystem;
 
-public class ECSHandler{
+public class ECSManager {
 
     private Editor editor;
     private Viewport ecsViewport, uiViewport;
@@ -23,7 +20,7 @@ public class ECSHandler{
     private IntBag tmpIntBag = new IntBag();
     private Entity selectedEntity;
 
-    public ECSHandler(Editor editor, Viewport ecsViewport, Viewport uiViewport){
+    public ECSManager(Editor editor, Viewport ecsViewport, Viewport uiViewport){
         this.editor = editor;
         this.ecsViewport = ecsViewport;
         this.uiViewport = uiViewport;
@@ -39,8 +36,11 @@ public class ECSHandler{
                         new RenderSystem(editor.getBatch()),
                         new DebugSystem(editor.getShapeRenderer(), ecsViewport, this))
                 .build();
+        Injector injector = createInjector();
+        config.setInjector(injector);
         this.world = new World(config);
     }
+
 
     private void initTransformSubscription() {
         transformSubscription = world.getAspectSubscriptionManager().get(Aspect.all(Transform.class));
@@ -66,6 +66,21 @@ public class ECSHandler{
         });
     }
 
+
+    /**
+     * handles dependency injection and annotations that are used for reading injections
+     * @return
+     */
+    private Injector createInjector() {
+        // handling @Wire annotated fields are not by default present in world config so the custom field
+        // resolver should take care of it if @Wire is wanted
+        // FieldHandler fieldHandler = new FieldHandler(new InjectionCache());
+        // fieldHandler.addFieldResolver(new CustomFieldsResolver());
+
+        Injector injector = new CachedInjector();
+        return injector;
+    }
+
     // -- public --
 
 
@@ -77,7 +92,11 @@ public class ECSHandler{
         return selectedEntity;
     }
 
-    protected void setSelectedEntity(Entity selectedEntity) {
+    /**
+     * Only use when you know hat you are doing
+     * @param selectedEntity
+     */
+    public void setSelectedEntity(Entity selectedEntity) {
         this.selectedEntity = selectedEntity;
     }
 
@@ -92,7 +111,7 @@ public class ECSHandler{
         ComponentMapper<Transform> transformMapper = getTransformMapper();
         IntBag actives = transformSubscription.getActiveEntityIds().toIntBag(tmpIntBag);
         int[] ids = actives.getData();
-        for(int i = 0; i < actives.size(); i++){
+        for(int i = actives.size() -1; i >= 0; i--){
             int id = ids[i];
             Transform transform = transformMapper.getSafe(id, null);
             if(transform == null)continue;
@@ -108,6 +127,16 @@ public class ECSHandler{
 
     public World getWorld(){
         return world;
+    }
+
+    /**
+     * creates an entity with a {@link Transform} component
+     * @return the entity id
+     */
+    public int createEntity(){
+        int id = world.create();
+        Transform transform = world.edit(id).create(Transform.class);
+        return id;
     }
 
     public EntitySubscription getTransformSubscription(){
