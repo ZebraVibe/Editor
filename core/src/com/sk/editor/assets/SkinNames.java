@@ -14,6 +14,9 @@ public class SkinNames {
 	// pixel region
 	PIXEL_REGION = DEFAULT,
 
+	// ui base
+	UI_STYLE = DEFAULT,
+
 	// font
 	BITMAP_FONT = DEFAULT,
 
@@ -47,7 +50,10 @@ public class SkinNames {
 	WINDOW_STYLE = DEFAULT,
 
 	// scroll pane
-	SCROLL_PANE_STYLE = DEFAULT;
+	SCROLL_PANE_STYLE = DEFAULT,
+
+	// tree
+	TREE_STYLE = DEFAULT;
 
 
 }

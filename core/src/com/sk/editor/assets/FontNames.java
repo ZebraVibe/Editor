@@ -10,39 +10,44 @@ public enum FontNames {
     MONTSERRAT_MEDIUM("Montserrat-Medium.ttf"),
     MONTSERRAT_LIGHT("Montserrat-Light.ttf");
 
-   FontNames(String fontFileNameWithExtension){
-       int index = fontFileNameWithExtension.indexOf(".");
-       name = fontFileNameWithExtension.substring(0, index);
-       extension = fontFileNameWithExtension.substring(index, fontFileNameWithExtension.length());
-   }
-   String name, extension;
+    FontNames(String fontFileNameWithExtension) {
+        fileNameWithExtension = fontFileNameWithExtension;
+        int index = fontFileNameWithExtension.indexOf(".");
+        name = fontFileNameWithExtension.substring(0, index);
+        extension = fontFileNameWithExtension.substring(index, fontFileNameWithExtension.length());
+    }
+
+    String fileNameWithExtension,name, extension;
 
     /**
-     *
      * @return the internal path
      */
     public String getPath() {
-        return AssetPaths.FONTS_DIR + name + extension;
+        return AssetPaths.FONTS_DIR + fileNameWithExtension;
+    }
+
+    public String getFileNameWithExtension(){
+        return fileNameWithExtension;
     }
 
     /**
-     *
-     * @return the regular font name without extension
+     * @return the font name
      */
-   public String getRegularName(){
+    public String getName() {
         return name;
-   }
+    }
 
-   public String getExtension(){
-       return extension;
-   }
+    public String getExtension() {
+        return extension;
+    }
 
     /**
-     *  To be used by asset manager. The extension might be needed for the asset manager to now
-     *  which loader to use
-     * @return name = {@link #getRegularName()} + fontSize + {@link #getExtension()}
+     * To be used by asset manager. The extension might be needed for the asset manager to now
+     * which loader to use
+     *
+     * @return name = {@link #getName()} + fontSize + {@link #getExtension()}
      */
-    public String getIdentifier(FontSize fontSize){
+    public String getIdentifier(FontSize fontSize) {
         return name + fontSize.toInt() + extension;
     }
 

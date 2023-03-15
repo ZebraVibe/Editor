@@ -1,6 +1,9 @@
 package com.sk.editor.scripting;
 
 import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
+import org.reflections.Reflections;
 
 import javax.tools.*;
 import java.io.File;
@@ -64,17 +67,30 @@ public class ClassLoadingManager {
      * @param className provided as packageName.className
      * @return the loaded class or null
      */
-    public Class<?> forName(String className){
+    public Class<?> forName(String className) throws ClassNotFoundException {
         if(className == null)return null;
+        // probably does not work
+        //return ClassReflection.forName(className); // since this class is not loaded with the script manager loader
+        return Class.forName(className, true, this.classLoader);
+        /*
         for(Class<?> cls : loadedClasses){
             if(cls.getName().equals(className))return cls;
         }
-        return null;
+        return null;*/
     }
 
 
     public URLClassLoader createURLCLassLoader(URL[] urls){
         return new URLClassLoader(null, urls, (ClassLoader)ClassLoader.getSystemClassLoader());
+    }
+
+    /**
+     *
+     * @return Maybe null. Since the class loader is newly created on each recompilation its not advised
+     * to store the loader.
+     */
+    public @Null URLClassLoader getCurrentClassLoader(){
+        return classLoader;
     }
 
     // -- private --

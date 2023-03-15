@@ -10,6 +10,8 @@ import com.badlogic.gdx.utils.Null;
  */
 public interface IAssetManagerHelper {
 
+    AssetLoaderParameters createAssetLoaderParameters(Object... assetLoaderParameterObjects);
+
     /**
      * to be called in {@link com.sk.editor.screens.LoadingScreen} before loading anything
      * @param manager
@@ -26,21 +28,28 @@ public interface IAssetManagerHelper {
     default @Null <T> T get(String key, Class<T> type, AssetManager manager) {
         return manager.get(key, type);
     }
-    default @Null <T> T getOrLoad(String key, Class<T> type, AssetManager manager, AssetLoaderParameters parameters) {
+    default @Null <T> T getOrLoad(String key, Class<T> type, AssetManager manager, Object ...assetLoaderParameterObjects) {
         if(manager.contains(key) == false){
-            loadToAssetManager(key, type, manager, parameters);
+            loadToAssetManager(key, type, manager, createAssetLoaderParameters(assetLoaderParameterObjects));
             manager.finishLoadingAsset(key);
         }
         return get(key, type, manager);
     }
 
 
-
-    default <T> void loadToAssetManager(String key, Class<T> typeToLoad, AssetManager manager, @Null AssetLoaderParameters parameters){
+    /**
+     *
+     * @param key
+     * @param typeToLoad
+     * @param manager
+     * @param assetLoaderParameterObjects to be used for the {@link AssetLoaderParameters}
+     * @param <T>
+     */
+    default <T> void loadToAssetManager(String key, Class<T> typeToLoad, AssetManager manager, Object ...assetLoaderParameterObjects){
         GdxRuntimeException e =  checkIfLoadersArePresent(manager);
         if(e != null)throw e;
         if (manager.contains(key)) return;
-        manager.load(key, typeToLoad, parameters);
+        manager.load(key, typeToLoad, createAssetLoaderParameters(assetLoaderParameterObjects));
     }
 
 }

@@ -6,9 +6,13 @@ public class AssetPaths {
 
 
 	/**
-	 * 	fonts are registered in @{@link FontNames} for convinience
+	 * 	fonts are registered in @{@link FontNames} for convenience
  	 */
 	public static final String FONTS_DIR = "fonts/";
 
+	/**
+	 * 	shaders are registered in @{@link ShaderNames} for convenience
+	 */
+	public static final String SHADERS_DIR = "shaders/";
 
 }

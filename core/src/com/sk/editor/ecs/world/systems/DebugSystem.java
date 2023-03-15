@@ -1,4 +1,4 @@
-package com.sk.editor.world.systems;
+package com.sk.editor.ecs.world.systems;
 
 import com.artemis.BaseEntitySystem;
 import com.artemis.ComponentMapper;
@@ -7,10 +7,10 @@ import com.artemis.annotations.All;
 import com.artemis.utils.IntBag;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.config.Config;
-import com.sk.editor.ecs.ECSManager;
-import com.sk.editor.world.components.Transform;
+import com.sk.editor.ecs.world.components.Transform;
 
 @All(Transform.class)
 public class DebugSystem extends BaseEntitySystem {
@@ -24,15 +24,14 @@ public class DebugSystem extends BaseEntitySystem {
 
     private ShapeRenderer renderer;
     private Viewport viewport;
-    private ECSManager ecsManager;
 
+    private @Null Entity selectedEntity;
 
     public boolean debug = true;
 
-    public DebugSystem(ShapeRenderer renderer, Viewport viewport, ECSManager ecsManager) {
+    public DebugSystem(ShapeRenderer renderer, Viewport viewport) {
         this.renderer = renderer;
         this.viewport = viewport;
-        this.ecsManager = ecsManager;
     }
 
     @Override
@@ -57,9 +56,8 @@ public class DebugSystem extends BaseEntitySystem {
         Transform transform = transformMapper.getSafe(entityId, null);
         if (transform == null) return;
 
-        Entity selected = ecsManager.getSelectedEntity();
         // set debug color
-        if (selected != null && entityId == selected.getId()){
+        if (selectedEntity != null && entityId == selectedEntity.getId()){
             renderer.setColor(SELECTED_COLOR);
         } else renderer.setColor(DEBUG_COLOR);
 
@@ -78,6 +76,15 @@ public class DebugSystem extends BaseEntitySystem {
         renderer.flush();
         renderer.setColor(tmpColor);
 
+    }
+
+    // -- public --
+
+    /**
+     * @param entity nullable
+     */
+    public void setSelectedEntity(@Null Entity entity){
+        selectedEntity = entity;
     }
 
 }

@@ -7,13 +7,17 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Logger;
+import com.badlogic.gdx.utils.Null;
 import com.sk.editor.config.Config;
+import com.sk.editor.ui.UILabel;
+import com.sk.editor.ui.UIWindow;
 
-public class Console extends Window {
+public class Console extends UIWindow {
 
     private Table content;
     private TextField commandLine;
     private ScrollPane scroll;
+    private UILabel currentLabel;
 
     public Console(Skin skin) {
         super("Console", skin);
@@ -21,13 +25,14 @@ public class Console extends Window {
     }
 
     private void init() {
-        pad(Config.DEFAULT_UI_PAD);
         Skin skin = getSkin();
 
         // scroll pane content
         content = new Table();
         content.top().left();
         content.defaults().left();
+        content.add(currentLabel).row();
+
         // scroll pane
         scroll = new ScrollPane(content, skin);
         scroll.addListener(new InputListener(){
@@ -69,19 +74,32 @@ public class Console extends Window {
         Color color = null;
         if(logLevel == Logger.ERROR)color = Color.RED;
         else if(logLevel == Logger.INFO)color = Color.YELLOW;
-        else color = Color.WHITE;
+        else {
+            color = Config.GREEN;
+        }
         print(text, color);
     }
 
     public void print(String text, Color color){
-        Label l = new Label(text, getSkin());
-        l.setColor(color);
-        content.add(l).row();
+        if(currentLabel == null || !color.equals(currentLabel.getStyle().fontColor)){
+            currentLabel = createLabel(color);
+            content.add(currentLabel).row();
+        }
+        currentLabel.getText().append((currentLabel.getText().isEmpty() ? "" : "\n") + text);
+        currentLabel.invalidateHierarchy();
+
         // scroll to bottom
         scroll.layout();
         scroll.setScrollPercentY(1);
     }
 
+    // -- private --
+
+    private UILabel createLabel(Color color){
+        UILabel label = new UILabel("", new Label.LabelStyle(getSkin().get(Label.LabelStyle.class)));
+        label.getStyle().fontColor = color.cpy();
+        return label;
+    }
 
 
 }

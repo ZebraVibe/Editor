@@ -1,4 +1,4 @@
-package com.sk.editor.world.entities;
+package com.sk.editor.ecs.world.entities;
 
 import com.artemis.World;
 

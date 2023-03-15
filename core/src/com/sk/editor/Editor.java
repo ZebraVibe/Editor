@@ -13,6 +13,7 @@ import com.sk.editor.screens.EditorScreen;
 import com.sk.editor.screens.LoadingScreen;
 import com.sk.editor.scripting.ScriptManager;
 import com.sk.editor.utils.Fonts;
+import com.sk.editor.utils.Shaders;
 
 //
 public class Editor extends Game {
@@ -22,6 +23,7 @@ public class Editor extends Game {
 	private AssetManager assets;
 	private Skin skin;
 	private Fonts fonts;
+	private Shaders shaders;
 	private ShapeRenderer renderer;
 	private Screen nextScreen;
 	private EditorManager editorManager;
@@ -33,6 +35,7 @@ public class Editor extends Game {
 		skin = new Skin();
 		assets = new AssetManager();
 		fonts = new Fonts(assets);
+		shaders = new Shaders(assets);
 		renderer = new ShapeRenderer();
 
 		editorManager = new EditorManager();
@@ -67,6 +70,10 @@ public class Editor extends Game {
 
 	public Fonts getFonts() {
 		return fonts;
+	}
+
+	public Shaders getShaders() {
+		return shaders;
 	}
 
 	public SpriteBatch getBatch() {

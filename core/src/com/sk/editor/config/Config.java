@@ -1,6 +1,7 @@
 package com.sk.editor.config;
 
 import com.badlogic.gdx.graphics.Color;
+import com.sk.editor.Editor;
 import com.sk.editor.utils.ColorConverter;
 
 public class Config {
@@ -23,11 +24,7 @@ public class Config {
 
 
 	// -- preferences --
-	public static final String SOURCE_PATH_PREFS_KEY = "srcPath";
-	public static final String CLASS_PATH_PREFS_KEY = "classPath";
-
-	public static final String PACKAGE_NAME_PREFS_KEY = "packageName";
-
+	public static String EDITOR_PREFERENCES = Editor.class.getName();
 
 
 	private Config() {}

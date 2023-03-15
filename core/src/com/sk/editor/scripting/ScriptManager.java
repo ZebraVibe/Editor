@@ -1,7 +1,11 @@
 package com.sk.editor.scripting;
 
 import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.sk.editor.ui.logger.EditorLogger;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanner;
+import org.reflections.scanners.SubTypesScanner;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -9,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Set;
 
 public class ScriptManager {
 
@@ -153,8 +158,7 @@ public class ScriptManager {
      * @return the given array tihe the current loaded classes added
      */
     public Array<Class<?>> getCurrentLoadedClasses(Array<Class<?>> classes){
-        classLoadingManager.getCurrentLoadedClasses(classes);
-        return classes;
+        return classLoadingManager.getCurrentLoadedClasses(classes);
     }
 
     /**
@@ -164,6 +168,38 @@ public class ScriptManager {
         return classLoadingManager.getCurrentLoadedClasses();
     }
 
+
+    /**
+     * @see @{@link ClassLoadingManager#forName(String)}
+     * @param className
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public Class<?> forName(String className) throws ClassNotFoundException {
+        return classLoadingManager.forName(className);
+    }
+
+    /**
+     *
+     * @param superClass
+     * @param array the array to fill the found class into
+     * @return the array
+     * @param <T>
+     * @throws ReflectionException
+     */
+    public <T> Array<Class<?>> getSubTypesOf(Class<T> superClass, Array<Class<?>> array) throws ReflectionException {
+        if(array == null)throw new ReflectionException("array can not be null.");
+        if(superClass == null)throw new ReflectionException("superClass can not be null.");
+
+        ClassLoader loader = classLoadingManager.getCurrentClassLoader();
+        if(loader == null)throw new ReflectionException("Loader can not be null.");
+
+        Reflections reflections = new Reflections(packageName, loader);
+        Set<Class <? extends T>> set = reflections.getSubTypesOf(superClass);
+        array.addAll(set.toArray(new Class<?>[0]));
+        return array;
+    }
+    
 
     /**
      * Changes are being read in the next {@link #compileAndLoad()} call.
@@ -225,5 +261,7 @@ public class ScriptManager {
             log.debug(clazz.getName());
         }
     }
+
+
 
 }

@@ -19,11 +19,8 @@ public class ECSProcessingActor extends Table {
         super.draw(batch, parentAlpha);
         batch.flush();
 
-        World world = ecsManager.getWorld();
-
         // render world
-        world.setDelta(Gdx.graphics.getDeltaTime());
-        world.process();
+        ecsManager.processWorld(Gdx.graphics.getDeltaTime());
     }
 
 }

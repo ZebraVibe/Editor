@@ -5,14 +5,10 @@ import com.artemis.ComponentMapper;
 import com.artemis.Entity;
 import com.artemis.utils.Bag;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -22,33 +18,34 @@ import com.badlogic.gdx.utils.reflect.Field;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.EditorManager;
-import com.sk.editor.assets.SkinNames;
 import com.sk.editor.ecs.ECSManager;
 import com.sk.editor.scripting.ScriptManager;
-import com.sk.editor.ui.UIActor;
-import com.sk.editor.ui.UINames;
+import com.sk.editor.ui.UIBase;
+import com.sk.editor.ui.logger.EditorLogger;
+import com.sk.editor.utils.ArrayPool;
 import com.sk.editor.utils.UIUtils;
-import com.sk.editor.world.components.Transform;
+import com.sk.editor.ecs.world.components.Transform;
 
-public class Inspector extends UIActor {
+public class Inspector extends UIBase {
 
-    private static final Logger log = new Logger(Inspector.class.toString(), Logger.DEBUG);
+    private static final EditorLogger log = new EditorLogger(Inspector.class.toString(), Logger.DEBUG);
+
+    private final ArrayPool arrayPool = new ArrayPool();
+
 
     private Skin skin;
-    private TextureRegion pixelRegion;
-    private ShaderProgram roundedCorners, roundedCornersShadow;
+    private Stage ecsStage;
     private ECSManager ecsManager;
     private ScriptManager scriptManager;
     private EditorManager editorManager;
+    private @Null Entity currentEntity;
+    private Rectangle clampCoord = new Rectangle();
 
 
-    public Inspector(Skin skin, ShaderProgram roundedCorners, ShaderProgram roundedCornersShadow,
-                     ECSManager ecsManager, EditorManager editorManager, ScriptManager scriptManager) {
-        super(skin.get(SkinNames.PIXEL_REGION, TextureRegion.class), roundedCorners, roundedCornersShadow);
+    public Inspector(Skin skin, Stage ecsStage, ECSManager ecsManager, EditorManager editorManager, ScriptManager scriptManager) {
+        super(skin);
         this.skin = skin;
-        this.pixelRegion = skin.get(SkinNames.PIXEL_REGION, TextureRegion.class);
-        this.roundedCorners = roundedCorners;
-        this.roundedCornersShadow = roundedCornersShadow;
+        this.ecsStage = ecsStage;
         this.ecsManager = ecsManager;
         this.editorManager = editorManager;
         this.scriptManager = scriptManager;
@@ -131,14 +128,12 @@ public class Inspector extends UIActor {
      * @return
      */
     private <T> Actor createTextField(Object obj, Field field) {
-        UIActor container = new UIActor(pixelRegion, roundedCorners, roundedCornersShadow);
-        container.setBackgroundAlpha(0);
-        //container.defaults().expandX().fillX();
+        UIBase container = newUIBase();
 
         try {
             Label label = createLabel(obj, field);// sets widget name too
 
-            TextField.TextFieldStyle tfStyle = new TextField.TextFieldStyle(skin.get(SkinNames.TEXT_FIELD_STYLE10, TextField.TextFieldStyle.class));
+            TextField.TextFieldStyle tfStyle = new TextField.TextFieldStyle(skin.get(TextField.TextFieldStyle.class));
             String value = "" + UIUtils.getFieldValue(field, obj);
             TextField tf = new TextField(value, tfStyle) {
 
@@ -217,6 +212,14 @@ public class Inspector extends UIActor {
         return container;
     }
 
+    private UIBase newUIBase() {
+        UIBase actor = new UIBase(skin);
+        UIStyle style = actor.getStyle();
+        style.backgroundColor.a = 0;
+        style.shadowSize = 0;
+        return actor;
+    }
+
 
     /**
      * @param obj   the object containing the desired field
@@ -272,27 +275,6 @@ public class Inspector extends UIActor {
         return label;
     }
 
-
-    /**
-     * doesnt include objects /classes/enums/interfaces
-     */
-    private @Null Object parsePrimitiveType(String value, Class<?> type) throws Exception {
-        if (type == int.class)
-            return Integer.parseInt(value);
-        else if (type == float.class)
-            return Float.parseFloat(value);
-        else if (type == double.class)
-            return Double.parseDouble(value);
-        else if (type == long.class)
-            return Long.parseLong(value);
-        else if (type.isAssignableFrom(String.class))
-            return value;
-        else if (type == boolean.class)
-            return Boolean.parseBoolean(value);
-        // else if(castType instanceof Object) {}
-        return null;
-    }
-
     private ScrollPane createScrollPane(Table scrollContainer) {
         scrollContainer.setTouchable(Touchable.enabled);
         ScrollPane scrollPane = new ScrollPane(scrollContainer, skin);
@@ -310,8 +292,7 @@ public class Inspector extends UIActor {
     }
 
     private Actor createComponentContainer(Component c) {
-        UIActor componentContainer = new UIActor(pixelRegion, roundedCorners, roundedCornersShadow);
-        componentContainer.setBackgroundAlpha(0);
+        UIBase componentContainer = newUIBase();
         String componentName = getComponentWidgetName(c.getClass());
         componentContainer.setName(componentName);
 
@@ -341,6 +322,32 @@ public class Inspector extends UIActor {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 //.. add script
+                Class componentClass = com.artemis.Component.class;
+                Class systemClass = com.artemis.BaseSystem.class;
+                Array<Class<?>> array = arrayPool.obtain();
+
+                // debug components
+                try {
+                    log.debug("-----------------------------------------------");
+                    log.debug("Listing loaded scripts with super class: " + componentClass.getName());
+                    scriptManager.getSubTypesOf(componentClass, array);
+                    array.forEach(e -> log.debug(e.getName()));
+                } catch (ReflectionException e) {
+                    log.error("Could not get sub types of " + componentClass.getName(), e);
+                }
+                array.clear();
+
+                // debug systems
+                try {
+                    log.debug("-----------------------------------------------");
+                    log.debug("Listing loaded scripts with super class: " + systemClass.getName());
+                    scriptManager.getSubTypesOf(systemClass, array);
+                    array.forEach(e -> log.debug(e.getName()));
+                } catch (ReflectionException e) {
+                    log.error("Could not get sub types of " + systemClass.getName(), e);
+                }
+
+                arrayPool.free(array);
             }
         });
         return button;
@@ -358,14 +365,42 @@ public class Inspector extends UIActor {
     }
 
     private TextButton createTextButton() {
-        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(
-                skin.get(SkinNames.IMAGE_TEXT_BUTTON_STYLE_10, ImageTextButton.ImageTextButtonStyle.class));
-        TextButton button = new TextButton("", style);
+        TextButton button = new TextButton("", skin);
         return button;
     }
 
+
+    /**
+     * doesnt include objects /classes/enums/interfaces
+     */
+    private @Null Object parsePrimitiveType(String value, Class<?> type) throws Exception {
+        if (type == int.class)
+            return Integer.parseInt(value);
+        else if (type == float.class)
+            return Float.parseFloat(value);
+        else if (type == double.class)
+            return Double.parseDouble(value);
+        else if (type == long.class)
+            return Long.parseLong(value);
+        else if (type.isAssignableFrom(String.class))
+            return value;
+        else if (type == boolean.class)
+            return Boolean.parseBoolean(value);
+        // else if(castType instanceof Object) {}
+        return null;
+    }
+
+
     // -- public --
 
+    /**
+     *
+     * @param entity if null and the return is true no entity is currently displayed on
+     * @return true if the inspector shows information about the given entity
+     */
+    public boolean isCurrent(@Null Entity entity){
+        return entity == currentEntity;
+    }
 
     /**
      * May update the inspectors information via {@link #fill(Entity)}
@@ -375,8 +410,9 @@ public class Inspector extends UIActor {
      * @param newSelected the entity which is inspected
      * @return whether the refreshment was successfull
      */
-    public boolean update(Entity newSelected, Entity previous) {
-        if (newSelected == previous) return false;
+    public boolean update(@Null Entity newSelected) {
+        if (isCurrent(newSelected)) return false;
+        currentEntity = newSelected;
         fill(newSelected);
         return true;
     }
@@ -392,11 +428,10 @@ public class Inspector extends UIActor {
      * @return true if update was successfull
      */
     public <T extends Component> boolean updateWidgetValue(Class<T> componentType, String fieldName, Object newValue) {
-        ComponentMapper<T> mapper = ecsManager.getWorld().getMapper(componentType);
-        Entity entity = ecsManager.getSelectedEntity();
-        if (entity == null) return false;
+        ComponentMapper<T> mapper = ecsManager.getMapper(componentType);;
+        if (currentEntity == null) return false;
         try {
-            Object obj = mapper.get(entity);
+            Object obj = mapper.get(currentEntity);
             Field field = UIUtils.getDeclaredFieldOf(componentType, fieldName);
 
             Actor widget = findFieldValueWidget(componentType, fieldName);
@@ -478,62 +513,54 @@ public class Inspector extends UIActor {
     }
 
 
+    public void setClampedBounds(float x, float y, float width, float height ){
+        clampCoord.set(x, y, x + width,  y + height);
+    }
+
     /**
-     * @param inspected can be null
+     * positions the inspector relative to the given to be inspected entity
+     * @param inspected nullable.
      */
-    public void updateInspectorPositionRelativeTo(@Null Entity inspected, Stage ecsStage) {
+    public void setPositionRelativeTo(@Null Entity inspected) {
         if (inspected == null) return;
         Stage uiStage = getStage();
         Viewport uiViewport = uiStage.getViewport();
-        Vector2 newCoord = Pools.obtain(Vector2.class);
         Transform transform = ecsManager.getTransformMapper().get(inspected);
         float zoom = ((OrthographicCamera) uiViewport.getCamera()).zoom;
-        // above entity
-        float newX = transform.x + transform.width / 2f;
-        float newY = transform.y + transform.height;
 
+        Vector2 newCoord = Pools.obtain(Vector2.class);
 
-        newCoord.set(newX, newY); // top right corner
+        // entity top coord
+        newCoord.x =  transform.x + transform.width / 2f;
+        newCoord.y = transform.y + transform.height;
+
         ecsStage.stageToScreenCoordinates(newCoord); // world to screen coord
         uiStage.screenToStageCoordinates(newCoord);
+
+        // add gap
         float gap = 16;
         newCoord.y += gap;
 
+        // position bottom left corner of properly
+        newCoord.x -= getWidth() /2f;
+
+
         //clamp inside bounds
-        Actor boundsActor = uiStage.getRoot().findActor(UINames.INSPECTOR_CLAMPED_BOUNDS);
+        float clampX1 = (clampCoord.x >= 0 ? clampCoord.x : 0);
+        float clampX2 = (clampCoord.width > 0 ? clampCoord.width : getParent().getWidth());
 
-        // set position
-        float time = 0.25f;
-        int alignment = Align.bottom;
-        float xDiff = getX(alignment) - getX();
-        float yDiff = getY(alignment) - getY();
-        //clamp inside bounds
-        float toX = MathUtils.clamp(newCoord.x, boundsActor.getX() + xDiff, boundsActor.getX(Align.right) - (getWidth() - xDiff));
-        float toY = MathUtils.clamp(newCoord.y, boundsActor.getY() + yDiff, boundsActor.getY(Align.top) - (getHeight() - yDiff));
+        float clampY1 = (clampCoord.y >= 0 ? clampCoord.y : 0);
+        float clampY2 = (clampCoord.height > 0 ? clampCoord.height : getParent().getHeight());
 
-        /*
-        Array<Action> actions = getActions();
-        boolean hasAction = false;
-        for (Action action : actions) {
-            if (action instanceof MoveToAction) {
-                MoveToAction a = (MoveToAction) action;
-                a.setPosition(toX, toY, alignment);
-                hasAction = true;
-            }
-        }
 
-        if (!hasAction) {
-            MoveToAction action = Actions.moveToAligned(toX, toY, alignment, time, Interpolation.smooth2);
-            addAction(action);
-        }*/
-
-        getActions().clear();
-        MoveToAction action = Actions.moveToAligned(toX, toY, alignment, time, Interpolation.smooth2);
-        addAction(action);
+        int toX = (int)MathUtils.clamp(newCoord.x, clampX1, clampX2 - getWidth());
+        int toY = (int)MathUtils.clamp(newCoord.y, clampY1, clampY2 - getHeight());
+        setPosition(toX, toY);
 
 
         Pools.free(newCoord);
 
     }
+
 
 }

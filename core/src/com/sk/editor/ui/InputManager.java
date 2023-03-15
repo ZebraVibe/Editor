@@ -1,6 +1,9 @@
 package com.sk.editor.ui;
 
+import com.artemis.Aspect;
 import com.artemis.Entity;
+import com.artemis.EntitySubscription;
+import com.artemis.utils.IntBag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -15,21 +18,23 @@ import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.ecs.ECSManager;
 import com.sk.editor.ui.inspector.Inspector;
-import com.sk.editor.world.components.Transform;
+import com.sk.editor.ui.overview.Hierarchy;
+import com.sk.editor.ecs.world.components.Transform;
 
-public class InputHandlerActor extends Table {
+public class InputManager extends Table {
 
-    private static final Logger log = new Logger(InputHandlerActor.class.toString(), Logger.DEBUG);
+    private static final Logger log = new Logger(InputManager.class.toString(), Logger.DEBUG);
 
     private final int RIGHT_MOUSE_BUTTON = Input.Buttons.RIGHT;
     private final int LEFT_MOUSE_BUTTON = Input.Buttons.LEFT;
-    private Stage ecsStage, uiStage;
+    private Stage ecsStage;
+    private UIStage uiStage;
     private OrthographicCamera ecsCamera;
     private Viewport ecsViewport, uiViewport;
     private ECSManager ecsManager;
-    private @Null Inspector hasInspector;
 
-    public InputHandlerActor(Stage uiStage, Stage ecsStage, ECSManager ecsManager) {
+
+    public InputManager(UIStage uiStage, Stage ecsStage, ECSManager ecsManager) {
         this.uiStage = uiStage;
         this.uiViewport = uiStage.getViewport();
         this.ecsStage = ecsStage;
@@ -37,6 +42,7 @@ public class InputHandlerActor extends Table {
         this.ecsCamera = (OrthographicCamera) (ecsViewport.getCamera());
         this.ecsManager = ecsManager;
         initListeners();
+        initSubscriptionListener();
     }
 
     private void initListeners() {
@@ -51,7 +57,7 @@ public class InputHandlerActor extends Table {
 
             Vector2 delta = new Vector2();
 
-            Entity prevSelected, dragged;
+            Entity dragged, prevSelected;
             boolean isDragging;
 
             @Override
@@ -67,7 +73,7 @@ public class InputHandlerActor extends Table {
                 // check if is hitting an entity
                 Entity hit = ecsManager.hitWorld(tmp.x, tmp.y);
                 if (hit != null) {
-                    Entity currentSelected = ecsManager.getSelectedEntity();
+                    Entity currentSelected = getFocusedEntity();
                     // 2 clicks to drag
                     if (currentSelected != null && hit == currentSelected) {
                         dragged = hit;
@@ -78,8 +84,8 @@ public class InputHandlerActor extends Table {
                 Pools.free(tmp);
 
 
-                prevSelected = ecsManager.getSelectedEntity();
-                ecsManager.setSelectedEntity(hit);
+                prevSelected = getFocusedEntity();
+                setFocusedEntity(hit);
 
                 // has hit
                 if (hit != null) return true;
@@ -94,7 +100,7 @@ public class InputHandlerActor extends Table {
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 if (dragged == null) return;
                 isDragging = true;
-                Entity lastSelected = ecsManager.getSelectedEntity();
+                Entity lastSelected = getFocusedEntity();
                 Transform transform = ecsManager.getTransformMapper().get(lastSelected);
                 Vector2 tmp = Pools.obtain(Vector2.class);
                 // get mouse position
@@ -113,7 +119,7 @@ public class InputHandlerActor extends Table {
 
                 // make inspector translucent while being dragged
                 setInspectorAlpha(0.5f);
-                inspector.updateInspectorPositionRelativeTo(lastSelected, ecsStage);
+                inspector.setPositionRelativeTo(lastSelected);
 
                 Pools.free(tmp);
             }
@@ -121,19 +127,14 @@ public class InputHandlerActor extends Table {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 // selected entity is here always != null
-                Entity selected = ecsManager.getSelectedEntity();
-                boolean hasSelectedNotChanged = prevSelected == selected;
+                Entity selectedEntity = getHierarchy().getSelectedEntity();
+                boolean hasSelectedChanged = prevSelected == selectedEntity;
                 boolean hasNotDragged = !isDragging;
 
-                //toggle inspector visibility
-                if(hasSelectedNotChanged){
-                    if(hasNotDragged){
-                        //toggleInspectorVisibility();
-                        boolean visible = getInspector().isVisible();
-                        showInspector(!visible, selected, prevSelected);
-                    }
-
-                } else showInspector(true, selected, prevSelected);
+                if(hasSelectedChanged){
+                    showInspector(selectedEntity);
+                    getHierarchy().chooseNode(selectedEntity);
+                }
 
                 // undo dragging 0.5 alpha
                 if(isDragging)setInspectorAlpha(1);
@@ -175,7 +176,7 @@ public class InputHandlerActor extends Table {
 
                 //update inspector
                 Inspector inspector = getInspector();
-                inspector.updateInspectorPositionRelativeTo(ecsManager.getSelectedEntity(), ecsStage);
+                inspector.setPositionRelativeTo(getFocusedEntity());
 
                 lastMouseX = mouseX;
                 lastMouseY = mouseY;
@@ -214,7 +215,7 @@ public class InputHandlerActor extends Table {
 
                 //updateCanvasCameras(); // update canvases in listener
                 Inspector inspector = getInspector();
-                inspector.updateInspectorPositionRelativeTo(ecsManager.getSelectedEntity(), ecsStage);
+                inspector.setPositionRelativeTo(getFocusedEntity());
 
 
                 pool.free(screenTouch);
@@ -228,38 +229,45 @@ public class InputHandlerActor extends Table {
 
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                event.getStage().setScrollFocus(InputHandlerActor.this);
+                event.getStage().setScrollFocus(InputManager.this);
             }
         };
         addListener(cameraListener);
     }
 
+    private void initSubscriptionListener() {
+        EntitySubscription sub = ecsManager.geAspectSubscriptionManager().get(Aspect.all(Transform.class));
+        sub.addSubscriptionListener(new EntitySubscription.SubscriptionListener() {
+
+            @Override // bag with inserted entities
+            public void inserted(IntBag entities) {}
+
+            @Override // bag with removed entities
+            public void removed(IntBag entities) {
+                Entity selected = getFocusedEntity();
+                if(selected != null && entities.contains(selected.getId())){
+                    setFocusedEntity(null); // in case selected eneity got removed
+                }
+            }
+        });
+    }
 
     // -- ui elements --
-    private Inspector getInspector() {
-        if (hasInspector != null) return hasInspector;
-        hasInspector = uiStage.getRoot().findActor(UINames.INSPECTOR);
-        return hasInspector;
+
+    /**
+     * method instead of attribute since Hierarchy might not be initialized on this instanceS' creation
+     * @return
+     */
+    private Hierarchy getHierarchy() {
+        return uiStage.findUIActor(Hierarchy.class);
     }
 
     /**
-     * makes inspector visible, sets alpha to 1, repositions it and
-     * refreshes it if needed
-     *
-     * @param show      if false hides the inspector
-     * @param entity gets ignored if show is false
+     * method instead of attribute since Hierarchy might not be initialized on this instanceS' creation
+     * @return
      */
-    private void showInspector(boolean show, Entity entity, Entity previous) {
-        Inspector inspector = getInspector();
-        setInspectorVisible(show);
-        setInspectorAlpha(1);
-        if (show == false) return;
-
-        // fill inspector;
-        //inspector.fill(inspected);
-        inspector.update(entity, previous);
-        inspector.updateInspectorPositionRelativeTo(entity, ecsStage);
-
+    private Inspector getInspector() {
+        return uiStage.findUIActor(Inspector.class);
     }
 
     private void setInspectorVisible(boolean visible){
@@ -269,6 +277,58 @@ public class InputHandlerActor extends Table {
     private void setInspectorAlpha(float alpha) {
         Inspector inspector = getInspector();
         inspector.getColor().a = alpha;
+    }
+
+    // -- public --
+
+    /**
+     *
+     * @return the entity selected (i.e. to inspect)
+     */
+    public Entity getFocusedEntity() {
+        Hierarchy hierarchy = getHierarchy();
+        if(hierarchy == null)return null;
+        return hierarchy.getSelectedEntity();
+    }
+
+    /**
+     * @param entity true if the given entity (nullable) is the currently focused entity
+     * @return
+     */
+    public boolean isFocusedEntity(@Null Entity entity){
+        return getFocusedEntity() == entity;
+    }
+
+
+    /**
+     * selects the proper node in the @{@link Hierarchy} and shows the inspector
+     * @param focusedEntity
+     */
+    public void setFocusedEntity(Entity focusedEntity) {
+        Hierarchy hierarchy = getHierarchy();
+        if(hierarchy == null)return;
+        showInspector(focusedEntity);
+        hierarchy.chooseNode(focusedEntity);
+    }
+
+
+    /**
+     * makes inspector visible, sets alpha to 1, repositions it and
+     * refreshes it if needed. Does not select the given entity. Does not
+     * select the entities' node in the hierarchy.
+     * @param entity if null hides the inspector
+     */
+    public void showInspector(@Null Entity entity) {
+        boolean show = entity != null;
+        Inspector inspector = getInspector();
+        setInspectorVisible(show);
+        setInspectorAlpha(1);
+        if (show == false) return;
+
+        // update inspector;
+        inspector.update(entity);
+        inspector.setPositionRelativeTo(entity);
+
     }
 
 }

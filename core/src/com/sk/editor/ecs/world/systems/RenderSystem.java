@@ -1,4 +1,4 @@
-package com.sk.editor.world.systems;
+package com.sk.editor.ecs.world.systems;
 
 import com.artemis.BaseEntitySystem;
 import com.artemis.ComponentMapper;
@@ -6,8 +6,8 @@ import com.artemis.annotations.All;
 import com.artemis.utils.IntBag;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.sk.editor.world.components.Image;
-import com.sk.editor.world.components.Transform;
+import com.sk.editor.ecs.world.components.Image;
+import com.sk.editor.ecs.world.components.Transform;
 
 @All({Transform.class, Image.class})
 public class RenderSystem extends BaseEntitySystem {

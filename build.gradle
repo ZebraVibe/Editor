@@ -30,6 +30,7 @@ allprojects {
         aiVersion = '1.8.2'
         gdxControllersVersion = '2.2.1'
         artemisVersion = '2.3.0'
+        gpt3JavaVersion = '0.11.0'
     }
 
     repositories {
@@ -115,7 +116,6 @@ project(":html") {
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"
         api "com.badlogicgames.ashley:ashley:$ashleyVersion:sources"
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion:sources"
-        
     }
 }
 
@@ -135,5 +135,6 @@ project(":core") {
         api "org.reflections:reflections:0.9.12" // added to use search for annotations
         api "net.onedaybeard.artemis:artemis-odb:$artemisVersion" // added to use artemis-odb ecs
         //api 'org.python:jython-slim:2.7.3'
+        api "com.theokanning.openai-gpt3-java:service:$gpt3JavaVersion" // chat gpt3 integration
     }
 }
