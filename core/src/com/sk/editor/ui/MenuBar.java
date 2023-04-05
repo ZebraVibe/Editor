@@ -1,5 +1,6 @@
 package com.sk.editor.ui;
 
+import com.artemis.Entity;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -17,7 +18,7 @@ import com.sk.editor.ecs.ECSManager;
 import com.sk.editor.scripting.ScriptManager;
 import com.sk.editor.ui.console.Console;
 import com.sk.editor.ui.logger.EditorLogger;
-import com.sk.editor.ecs.world.components.Transform;
+import com.sk.editor.ecs.components.Transform;
 import com.theokanning.openai.completion.chat.*;
 import com.theokanning.openai.service.OpenAiService;
 
@@ -54,14 +55,23 @@ public class MenuBar extends UIBase{
     private void init(){
         Skin skin = getSkin();
 
+        // save button
+        TextButton saveButton = new TextButton("Save", skin);
+        saveButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                ecsManager.saveWorld();
+            }
+        });
+
 
         // create entity button
         TextButton createButton = new TextButton("Create", skin);
         createButton.addListener(new ClickListener(Input.Buttons.LEFT) {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                int id = ecsManager.createEntity();
-                Transform transform = ecsManager.getTransformMapper().get(id);
+                Entity e = ecsManager.createCanvas();
+                Transform transform = ecsManager.getTransformMapper().get(e);
                 transform.setSize(64, 64);
                 Vector3 camCoords = ecsViewport.getCamera().position;
                 transform.setPosition(camCoords.x, camCoords.y);
@@ -144,7 +154,7 @@ public class MenuBar extends UIBase{
         // add to bar
         left();
         defaults().spaceRight(8);
-        add(createButton, consoleButton, srcPathButton, chatGPTButton);
+        add(saveButton, createButton, consoleButton, srcPathButton, chatGPTButton);
     }
 
     private Actor createChatGPTButton() {

@@ -1,4 +1,4 @@
-package com.sk.editor.ecs.world.components;
+package com.sk.editor.ecs.components;
 
 import com.artemis.PooledComponent;
 import com.artemis.annotations.PooledWeaver;

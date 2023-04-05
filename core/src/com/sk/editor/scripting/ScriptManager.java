@@ -187,12 +187,12 @@ public class ScriptManager {
      * @param <T>
      * @throws ReflectionException
      */
-    public <T> Array<Class<?>> getSubTypesOf(Class<T> superClass, Array<Class<?>> array) throws ReflectionException {
+    public <T> Array<Class<?>> getSubTypesOf(Class<T> superClass, Array<Class<?>> array)throws ReflectionException {
         if(array == null)throw new ReflectionException("array can not be null.");
         if(superClass == null)throw new ReflectionException("superClass can not be null.");
 
         ClassLoader loader = classLoadingManager.getCurrentClassLoader();
-        if(loader == null)throw new ReflectionException("Loader can not be null.");
+        if(loader == null)throw new GdxRuntimeException("Loader can not be null.");
 
         Reflections reflections = new Reflections(packageName, loader);
         Set<Class <? extends T>> set = reflections.getSubTypesOf(superClass);

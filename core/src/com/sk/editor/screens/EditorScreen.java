@@ -1,15 +1,13 @@
 package com.sk.editor.screens;
 
+import com.artemis.Entity;
 import com.artemis.EntityEdit;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -25,6 +23,7 @@ import com.sk.editor.assets.AssetDescriptors;
 import com.sk.editor.assets.RegionNames;
 import com.sk.editor.config.Config;
 import com.sk.editor.ecs.ECSManager;
+import com.sk.editor.ecs.components.Canvas;
 import com.sk.editor.scripting.ScriptManager;
 import com.sk.editor.ui.*;
 import com.sk.editor.ui.console.Console;
@@ -32,9 +31,9 @@ import com.sk.editor.ui.listeners.ResizeListener;
 import com.sk.editor.ui.inspector.Inspector;
 import com.sk.editor.ui.logger.EditorLogger;
 import com.sk.editor.ui.logger.LoggerListener;
-import com.sk.editor.ui.overview.Hierarchy;
-import com.sk.editor.ecs.world.components.Image;
-import com.sk.editor.ecs.world.components.Transform;
+import com.sk.editor.ui.hierarchy.Hierarchy;
+import com.sk.editor.ecs.components.Image;
+import com.sk.editor.ecs.components.Transform;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
@@ -49,6 +48,7 @@ public class EditorScreen extends ScreenAdapter {
     private SpriteBatch batch;
     private UIStage uiStage;
     private Stage ecsStage;
+    private NotifyingOrthographicCamera ecsCamera;
     private Viewport uiViewport, ecsViewport;
     private Skin skin;
     private Texture repeatingGridTexture, badlogic;
@@ -60,7 +60,6 @@ public class EditorScreen extends ScreenAdapter {
     private Inspector inspector;
     private Console console;
     private Hierarchy hierarchy;
-
 
     public EditorScreen(Editor editor) {
         this.editor = editor;
@@ -98,8 +97,13 @@ public class EditorScreen extends ScreenAdapter {
 
     private void initStages() {
         // create stages
-        NotifyingOrthographicCamera ecsCamera = new NotifyingOrthographicCamera();
-        ecsViewport = new ScreenViewport(ecsCamera);
+        this.ecsCamera = new NotifyingOrthographicCamera();
+        ecsViewport = new ScreenViewport(ecsCamera){
+            @Override
+            public void update(int screenWidth, int screenHeight, boolean centerCamera) {
+                super.update(screenWidth, screenHeight, centerCamera);
+            }
+        };
         uiViewport = new ScreenViewport();
 
         ecsStage = new Stage(ecsViewport, batch);
@@ -139,6 +143,7 @@ public class EditorScreen extends ScreenAdapter {
         // TODO: ecs manager has to inject dependencies for script manager loaded classes on each recompile and load
         // TODO: ecs manager has to handle script manager loaded classes' annotations on each recompile and load
         ecsManager = new ECSManager(editor, uiStage, ecsViewport);
+        ecsCamera.addCameraListener(ecsManager);
 
         // input
         inputManager = new InputManager(uiStage, ecsStage, ecsManager);
@@ -332,6 +337,7 @@ public class EditorScreen extends ScreenAdapter {
         Pools.free(event);
     }
 
+
     // -- public --
 
     @Override
@@ -349,51 +355,28 @@ public class EditorScreen extends ScreenAdapter {
     }
 
     private void updateDebugInput() {
-        // toggle console
-        /*
-        if(Gdx.input.isKeyJustPressed(Input.Keys.T)){
-            Actor focus = uiStage.getKeyboardFocus();
-            if(focus != null && focus.isDescendantOf(console) && focus != console)return;
-            console.setVisible(!console.isVisible());
-        }*/
-
-        // check shader compilation
-        /*
-        if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
-            log.debug(editor.getShaders().get(ShaderNames.CORNER).getLog());
-            log.debug(editor.getShaders().get(ShaderNames.CORNER_AND_SHADOW).getLog());
-        }*/
 
         // create entity
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            int entity = ecsManager.createEntity();
-            EntityEdit edit = ecsManager.editEntity(entity);
-            Transform transform = edit.create(Transform.class);
-            transform.width = 100;
-            transform.height = 100;
-            transform.x = ecsViewport.getCamera().position.x;
-            transform.y = ecsViewport.getCamera().position.y;
-            Image image = edit.create(Image.class);
+            Entity entity = ecsManager.createCanvas();
+            Transform transform = entity.getComponent(Transform.class);
+            transform.setSize(100,100);
+            transform.setPosition(ecsCamera.position.x, ecsCamera.position.y);
+            Image image = ecsManager.edit(entity).create(Image.class);
             image.region = new TextureRegion(badlogic);
         }
-        // manipulate shader
-        /*
-        float maxRadius = 50;
-        if (Gdx.input.isKeyPressed(Input.Keys.P)) {
-            float radius = MathUtils.clamp(testUIActor.getCornerRadius() + 1, 0, maxRadius);
-            testUIActor.setCornerRadius(radius);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.M)) {
-            float radius = MathUtils.clamp(testUIActor.getCornerRadius() - 1, 0, maxRadius);
-            testUIActor.setCornerRadius(radius);
-        }*/
+
+        // saving (ctrl + s)
+        if(Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.S)){
+            ecsManager.saveWorld();
+        }
     }
 
     @Override
     public void resize(int width, int height) {
         uiViewport.update(width, height, true);
-        ecsViewport.update(width, height, false);
-
-        fireResizeEvent();
+        ecsViewport.update(width, height, false);//world properties' viewport updated in here
+        fireResizeEvent(); // ui
     }
 
     @Override

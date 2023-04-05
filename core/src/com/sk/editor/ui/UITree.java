@@ -283,12 +283,12 @@ public class UITree<N extends UINode<N,V>,V> extends Tree<N,V> {
 
     /**
      *
-     * @param node the node to insert
+     * @param node the node to insert. can have a pre existing parent.
      * @param parent the parent to insert the node to. If null the node will be inserted as root node
      * @param index must be >= 0. the index to insert the node to
      * @return
      */
-    protected boolean insertNode(N node, @Null N parent, int index){
+    public boolean insertNode(N node, @Null N parent, int index){
         if(node == null || node == parent || index < 0 || (parent != null && index == parent.getChildren().indexOf(node, true))) {
             log.error("not inserting node");
             return false;
@@ -308,22 +308,6 @@ public class UITree<N extends UINode<N,V>,V> extends Tree<N,V> {
         //updateRootNodes();
         //parent.updateChildren();
 
-        /*
-        if(parent == null){
-            if(index > 0)prevNode = getRootNodes().get(index -1); // used to calc index correctly
-            if(prevNode == node)return false; // inserting after itself
-            node.remove(); // remove from old parent
-            index = getRootNodes().indexOf(prevNode, true) + 1; // calc index anew
-            insert(index, node);// insert as root
-
-        }else {
-            if(index > 0)prevNode = parent.getChildren().get(index -1); // used to calc index correctly
-            node.remove(); // remove from old parent
-            index = parent.getChildren().indexOf(prevNode, true) + 1; // calc index anew
-            parent.insert(index, node);// insert as child of parent
-
-        }
-        node.expandTo();*/
         log.debug("inserting node");
         return true;
     }
@@ -347,7 +331,8 @@ public class UITree<N extends UINode<N,V>,V> extends Tree<N,V> {
      * @param add if true ignores the prevNode parameter and appends the parents' children with this node
      * @return true if node could get inserted
      */
-    protected boolean insertDraggedNodeAt(N node, @Null N newParent, @Null N prevNode, boolean add) {
+    @Deprecated
+    private boolean insertDraggedNodeAt(N node, @Null N newParent, @Null N prevNode, boolean add) {
         if(node == null || node == newParent || node == prevNode ) {
             log.error("not inserting node");
             return false;

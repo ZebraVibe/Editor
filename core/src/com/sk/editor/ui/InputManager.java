@@ -18,8 +18,8 @@ import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.ecs.ECSManager;
 import com.sk.editor.ui.inspector.Inspector;
-import com.sk.editor.ui.overview.Hierarchy;
-import com.sk.editor.ecs.world.components.Transform;
+import com.sk.editor.ui.hierarchy.Hierarchy;
+import com.sk.editor.ecs.components.Transform;
 
 public class InputManager extends Table {
 
@@ -68,16 +68,23 @@ public class InputManager extends Table {
                 Vector2 tmp = Pools.obtain(Vector2.class);
                 // get mouse position
                 tmp.set(Gdx.input.getX(), Gdx.input.getY());
-                // screen to world coord
-                ecsViewport.unproject(tmp);
+
                 // check if is hitting an entity
-                Entity hit = ecsManager.hitWorld(tmp.x, tmp.y);
+                Entity hit = ecsManager.hitScreen(tmp.x, tmp.y);
+
+                // use transform to calc screen to world coord
+                //ecsViewport.unproject(tmp);
+
                 if (hit != null) {
                     Entity currentSelected = getFocusedEntity();
                     // 2 clicks to drag
                     if (currentSelected != null && hit == currentSelected) {
                         dragged = hit;
                         Transform transform = ecsManager.getTransformMapper().get(currentSelected);
+
+                        //screen to world coord using transforms' viewport
+                        transform.screenToWorldCoord(tmp);
+
                         delta.set(transform.x - tmp.x, transform.y - tmp.y);
                     }
                 }
@@ -90,7 +97,8 @@ public class InputManager extends Table {
                 // has hit
                 if (hit != null) return true;
                 // has no hit
-                setInspectorVisible(false);
+                //setInspectorVisible(false);
+                showInspector(null);
                 return false;
 
             }
@@ -271,7 +279,8 @@ public class InputManager extends Table {
     }
 
     private void setInspectorVisible(boolean visible){
-        getInspector().setVisible(visible);
+        Inspector inspector = getInspector();
+        inspector.setVisible(visible);
     }
 
     private void setInspectorAlpha(float alpha) {
@@ -323,7 +332,14 @@ public class InputManager extends Table {
         Inspector inspector = getInspector();
         setInspectorVisible(show);
         setInspectorAlpha(1);
-        if (show == false) return;
+        if (show == false) {
+            // remove keyboard focus if needed
+            Actor focus = uiStage.getKeyboardFocus();
+            if(focus != null && inspector.isAscendantOf(focus)){
+                uiStage.setKeyboardFocus(null);
+            }
+            return;
+        }
 
         // update inspector;
         inspector.update(entity);

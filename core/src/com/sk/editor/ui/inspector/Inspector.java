@@ -4,6 +4,7 @@ import com.artemis.Component;
 import com.artemis.ComponentMapper;
 import com.artemis.Entity;
 import com.artemis.utils.Bag;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -24,7 +25,7 @@ import com.sk.editor.ui.UIBase;
 import com.sk.editor.ui.logger.EditorLogger;
 import com.sk.editor.utils.ArrayPool;
 import com.sk.editor.utils.UIUtils;
-import com.sk.editor.ecs.world.components.Transform;
+import com.sk.editor.ecs.components.Transform;
 
 public class Inspector extends UIBase {
 
@@ -135,26 +136,7 @@ public class Inspector extends UIBase {
 
             TextField.TextFieldStyle tfStyle = new TextField.TextFieldStyle(skin.get(TextField.TextFieldStyle.class));
             String value = "" + UIUtils.getFieldValue(field, obj);
-            TextField tf = new TextField(value, tfStyle) {
-
-                //Object oldValue = UIUtils.getFieldValue(field, obj);
-
-                @Override
-                public void act(float delta) {
-                    /*
-                    try {
-                        // upate displayed value on external field change
-                        if (!hasKeyboardFocus() && !oldValue.equals(getFieldValue(field, obj))) {
-                            oldValue = getFieldValue(field, obj);
-                            setText("" + getFieldValue(field, obj));
-                        }
-                    } catch (Exception e) {
-                    }
-                    */
-
-                    super.act(delta);
-                }
-            };
+            TextField tf = new TextField(value, tfStyle);
             // set widget name
             tf.setName(field.getName());
 
@@ -187,6 +169,16 @@ public class Inspector extends UIBase {
 
             // update field
             tf.addListener(new InputListener() {
+
+                @Override
+                public boolean keyDown(InputEvent event, int keycode) {
+                    // remove keyboard focus on enter
+                    if(keycode == Input.Keys.ENTER){
+                        event.getStage().setKeyboardFocus(null);
+                        return true;
+                    }
+                    return false;
+                }
 
                 @Override
                 public boolean keyTyped(InputEvent event, char character) {
@@ -369,6 +361,7 @@ public class Inspector extends UIBase {
         return button;
     }
 
+    // -- util --
 
     /**
      * doesnt include objects /classes/enums/interfaces
@@ -531,17 +524,17 @@ public class Inspector extends UIBase {
         Vector2 newCoord = Pools.obtain(Vector2.class);
 
         // entity top coord
-        newCoord.x =  transform.x + transform.width / 2f;
-        newCoord.y = transform.y + transform.height;
+        transform.getPosition(newCoord, Align.top);
 
-        ecsStage.stageToScreenCoordinates(newCoord); // world to screen coord
+        //ecsStage.stageToScreenCoordinates(newCoord); // world to screen coord
+        transform.parentToScreenCoord(newCoord); // uses its correct viewport
         uiStage.screenToStageCoordinates(newCoord);
 
         // add gap
         float gap = 16;
         newCoord.y += gap;
 
-        // position bottom left corner of properly
+        // position bottom left corner properly
         newCoord.x -= getWidth() /2f;
 
 

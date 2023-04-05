@@ -105,7 +105,7 @@ public class UIUtils {
         try {
             field.setAccessible(true); // disable checks
             value = field.get(obj);
-            //field.setAccessible(false); // enable checks
+            field.setAccessible(false); // enable checks
         } catch (ReflectionException e) {
             log.error("couldnt get value of field " + field);
             e.printStackTrace();
@@ -124,7 +124,7 @@ public class UIUtils {
             field.setAccessible(true);
             field.set(obj, newValue);
             invokeMethodOfInvokeMethodAnnotation(obj, field);
-            //field.setAccessible(false);
+            field.setAccessible(false);
         } catch (ReflectionException e) {
             log.error("couldnt set value of field " + field);
             e.printStackTrace();
@@ -170,10 +170,7 @@ public class UIUtils {
             Method methodField = ClassReflection.getDeclaredMethod(obj.getClass(), methodName);
             methodField.setAccessible(true);
             methodField.invoke(obj);
-            /* boolean notAccessible = !methodField.isPublic();
-            if (notAccessible)methodField.setAccessible(true);
-            methodField.invoke(obj);
-            if (notAccessible)methodField.setAccessible(false);*/
+            methodField.setAccessible(false);
         } catch (Exception e) {
             log.error("Could not find/call the method " + methodName + " provided in annotation "
                     + InvokeMethod.class.getSimpleName() + ". Error: " + e.toString());

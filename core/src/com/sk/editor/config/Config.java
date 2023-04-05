@@ -24,7 +24,20 @@ public class Config {
 
 
 	// -- preferences --
-	public static String EDITOR_PREFERENCES = Editor.class.getName();
+
+
+	public static String EDITOR_PREFERENCES_NAME = Editor.class.getSimpleName();
+
+	/**
+	 * used with Files.FileType.External
+	 */
+	public static String EDITOR_PREFERENCES_DIR = "/.prefs/" + EDITOR_PREFERENCES_NAME +"/";
+
+	/**
+	 * used with Files.FileType.External
+	 */
+	@Deprecated
+	public static String WORLD_SAVE_FILE = EDITOR_PREFERENCES_DIR + "world";
 
 
 	private Config() {}

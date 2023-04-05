@@ -1,4 +1,4 @@
-package com.sk.editor.ecs.world.utils;
+package com.sk.editor.ecs.utils;
 
 public class Align extends com.badlogic.gdx.utils.Align {
 }
