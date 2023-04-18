@@ -183,7 +183,7 @@ public class ClassLoadingManager {
                 loadedClasses.add(cl.loadClass(fullClassName));
                 log.debug("Loading class: " + fullClassName);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Could not load class: classesDir: " + classesDir +  ", className: " + fullClassName,e);
+                throw new GdxRuntimeException("Could not load class: classesDir: " + classesDir +  ", className: " + fullClassName,e);
             }
 
 

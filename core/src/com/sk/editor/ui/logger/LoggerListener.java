@@ -2,25 +2,28 @@ package com.sk.editor.ui.logger;
 
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.Null;
 
-public class LoggerListener implements EventListener {
+public interface LoggerListener extends EventListener {
 
     @Override
-    public boolean handle(Event event) {
+    default boolean handle(Event event) {
         if(!(event instanceof LoggerEvent))return false;
         onLog((LoggerEvent) event);
         return true;
     }
 
-    public void onLog(LoggerEvent event){}
+    void onLog(LoggerEvent event);
 
 
     public static class LoggerEvent extends Event{
-        private String tag;
+        private String tag = "";
         private int level = Logger.NONE;
-        private String message = "", metaInfo = "";
+        private String message = "";
+        private Array<Object> metaInfo = new Array<>();
+        private Object object;
         private Exception exception;
 
         public String getTag(){
@@ -62,9 +65,9 @@ public class LoggerListener implements EventListener {
 
         /**
          * additional custom information that can be set by the user
-         * @return never null. Might be an empty string
+         * @return
          */
-        public String getMetaInfo() {
+        public Array<Object> getMetaInfo() {
             return metaInfo;
         }
 
@@ -72,9 +75,9 @@ public class LoggerListener implements EventListener {
          * additional custom information that can be set by the user
          * @param metaInfo if null ignores setting the meta information
          */
-        protected void setMetaInfo(String metaInfo) {
+        protected void setMetaInfo(Object...metaInfo) {
             if(metaInfo == null)return;
-            this.metaInfo = metaInfo;
+            this.metaInfo.addAll(metaInfo);
         }
 
         /**
@@ -98,7 +101,7 @@ public class LoggerListener implements EventListener {
             super.reset();
             level = Logger.NONE;
             message = "";
-            metaInfo = "";
+            metaInfo.clear();
             exception = null;
         }
     }

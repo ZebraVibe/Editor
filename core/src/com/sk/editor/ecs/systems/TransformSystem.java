@@ -22,14 +22,7 @@ public class TransformSystem extends BaseEntitySystem {
 
     @Override
     protected void inserted(int entityId) {
-        try {
-            Field field = ClassReflection.getDeclaredField(Transform.class, "entity");
-            Transform transform = transformMapper.get(entityId);
-            field.setAccessible(true);
-            field.set(transform, getWorld().getEntity(entityId));
-            field.setAccessible(false);
-        } catch (ReflectionException e) {
-            log.error("Could not initialize entity field!", e);
-        }
+        Transform transform = transformMapper.get(entityId);
+        transform.entity =  getWorld().getEntity(entityId);
     }
 }

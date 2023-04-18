@@ -8,9 +8,16 @@ import com.sk.editor.config.Config;
 
 public class PrefKeys{
     private final Preferences PREFS = Gdx.app.getPreferences(Config.EDITOR_PREFERENCES_NAME);
+
+    public final PrefKey<String> PROJECT_PATH = newKey("projPath", String.class);
+    @Deprecated
     public final PrefKey<String> SRC_PATH = newKey("srcPath", String.class);
+    @Deprecated
     public final PrefKey<String> CLASS_PATH = newKey("classPath", String.class);
+    @Deprecated
     public final PrefKey<String> PACKAGE_NAME = newKey("packageName", String.class);
+
+
     public final PrefKey<String> GPT3_API_KEY = newKey("gpt3APIKey", String.class);
     public final PrefKey<String> GPT_3_CONVERSATION_ID = newKey("gpt3ConvID", String.class);
     public final PrefKey<String> WORLD_SERIALIZATION = newKey("worldSerialization", String.class);

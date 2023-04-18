@@ -1,5 +1,6 @@
 package com.sk.editor.ui.logger;
 
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.Pools;
@@ -28,16 +29,12 @@ public class EditorLogger extends Logger {
 
     // -- private --
 
-    private void notifyListeners(String message, @Null String metaInfo, int level) {
-        notifyListeners(message, metaInfo, null, level);
-    }
-
     private void notifyListeners(String message, int level) {
-        notifyListeners(message, null, null, level);
+        notifyListeners(message, null, level, null);
     }
 
     private void notifyListeners(String message, Exception exception, int level) {
-        notifyListeners(message, null, exception, level);
+        notifyListeners(message, exception, level, null);
     }
 
     /**
@@ -46,7 +43,7 @@ public class EditorLogger extends Logger {
      * @param metaInfo nullable
      * @param exception nullable
      */
-    private void notifyListeners(@Null String message, @Null String metaInfo, @Null Exception exception, int level){
+    private void notifyListeners(@Null String message, Exception exception, int level, @Null Object... metaInfo){
         LoggerListener.LoggerEvent event = Pools.obtain(LoggerListener.LoggerEvent.class);
         event.setTag(tag);
         event.setLevel(level);
@@ -66,7 +63,6 @@ public class EditorLogger extends Logger {
 
     // -- public --
 
-
     // debug
     @Override
     public void debug(String message) {
@@ -80,10 +76,12 @@ public class EditorLogger extends Logger {
         super.debug(message, exception);
     }
 
-    public void debug(String message, String metaInfo, Exception exception) {
-        if(getLevel() >= DEBUG)notifyListeners(message, metaInfo, exception, Logger.DEBUG);
-        super.debug(message, exception);
+
+    public void debug(String message, Object... metaInfo) {
+        if(getLevel() >= DEBUG)notifyListeners(message, null, Logger.DEBUG, metaInfo);
+        super.debug(message);
     }
+
 
     // info
 
@@ -99,10 +97,11 @@ public class EditorLogger extends Logger {
         super.info(message, exception);
     }
 
-    public void info(String message, String metaInfo, Exception exception) {
-        if(getLevel() >= INFO)notifyListeners(message, metaInfo, exception, Logger.INFO);
-        super.info(message, exception);
+    public void info(String message, Object...metaInfo) {
+        if(getLevel() >= INFO)notifyListeners(message, null, Logger.INFO, metaInfo);
+        super.info(message);
     }
+
 
     // error
 
@@ -118,8 +117,9 @@ public class EditorLogger extends Logger {
         super.error(message, exception);
     }
 
-    public void error(String message, String metaInfo, Throwable exception) {
-        if(getLevel() >= ERROR)notifyListeners(message, metaInfo, (Exception)exception, Logger.ERROR);
-        super.error(message, exception);
+    public void error(String message, Object ...metaInfo) {
+        if(getLevel() >= ERROR)notifyListeners(message, null, Logger.ERROR, metaInfo);
+        super.error(message);
     }
+
 }

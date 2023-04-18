@@ -1,30 +1,24 @@
 package com.sk.editor.scripting;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.reflect.ReflectionException;
-import com.sk.editor.config.Config;
 import com.sk.editor.ui.logger.EditorLogger;
 import org.reflections.Reflections;
 
-import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 
-public class ScriptManager {
+public class ScriptManagerOld {
 
-    private static final EditorLogger log = new EditorLogger(ScriptManager.class.toString(), Logger.DEBUG);
+    private static final EditorLogger log = new EditorLogger(ScriptManagerOld.class.toString(), Logger.DEBUG);
 
-    private final String ASSETS_DIR = "/assets";
-    private final String CORE_DIR = "/core";
-    private final String SRC_PATH = CORE_DIR + "/src";
-    private final String CLASS_PATH = CORE_DIR + "/" + Config.CLASS_PATH_DIR_NAME;
-    private String projectPath;
+    private Path srcPath, classPath;
+    private String packageName;
 
     private FileTreeWalker fileTreeWalker;
     private ClassLoadingManager classLoadingManager;
@@ -34,27 +28,24 @@ public class ScriptManager {
     private boolean init;
 
     /**
-     * @param projectPath the absolute path of the project directory containing core, assets and desktop dir
+     * Input directory, output directory and package name must be set manually
      */
-    public ScriptManager(String projectPath){
+    public ScriptManagerOld(){}
+
+    /**
+     * @param inputDir    the source directory containing packages and .java files
+     * @param outputDir   the directory to which .class files are compiled to and loaded from
+     * @param packageName th root package name (i.e. com.my.game) of the project
+     */
+    public ScriptManagerOld(Path inputDir, Path outputDir, String packageName){
+        this.srcPath = inputDir;
+        this.classPath = outputDir;
+        this.packageName = packageName;
         // #init called in compile and load
-        try {
-            setProjectPath(projectPath, true); // tries to compile and load
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     // -- init --
     private void init() throws Exception {
-        log.debug("Initializing " + getClass().getSimpleName());
-
-        // check project path must be set yet
-        Path srcPath = Paths.get(getSrcPath());
-        Path classPath = Paths.get(getClassPath());
-        String packageName = getPackageName();
-
-
         //file tree walker
         fileTreeWalker = new FileTreeWalker();
 
@@ -83,13 +74,8 @@ public class ScriptManager {
         classLoadingManager = new ClassLoadingManager(classPath, fileTreeWalker) {
             @Override
             public URLClassLoader createURLCLassLoader(URL[] urls) {
-                log.debug("Creating ScriptClassLoader.");
                 ScriptClassLoader loader = new ScriptClassLoader(classPath, urls, (ClassLoader) ClassLoader.getSystemClassLoader());
                 loader.registerAllowedPackages(packageName);
-
-                // set the class loader as current context classloader of the thread
-                Thread.currentThread().setContextClassLoader(loader);
-
                 return loader;
             }
         };
@@ -102,15 +88,40 @@ public class ScriptManager {
      */
     public boolean compileAndLoad() throws Exception {
         if(!init){
+            // src path does not exist
+            if (srcPath == null || !Files.isDirectory(srcPath)){
+                log.error("Input dir invalid!");
+                return false;
+            }
+            log.debug("Input dir valid.");
+
+            // get or create output dir
+            if (classPath != null && !Files.exists(classPath)) {
+                classPath.toFile().mkdirs();
+                log.debug("Output file created: " + classPath);
+            }
+            // class path still does not exist
+            if (!Files.isDirectory(classPath)){
+                log.error("Output dir invalid!");
+                return false;
+            }
+            log.debug("Output dir valid.");
+
+            if(packageName == null){
+                log.error("Package name is missing!");
+                return false;
+            }
+
+
             init();
             init = true;
         }
 
 
-        log.debug("projectPath: " + getProjectPath());
-        log.debug("srcPath: " + getSrcPath());
-        log.debug("classPath: " + getClassPath());
-        log.debug("packageName: " + getPackageName());
+
+
+        log.debug("srcPath: " + srcPath.toString());
+        log.debug("classPath" + classPath.toString());
 
 
         // compiling
@@ -181,79 +192,69 @@ public class ScriptManager {
      * @param <T>
      * @throws ReflectionException
      */
-    public <T> Array<Class<? extends T>> getSubTypesOf(Class<T> superClass, Array<Class<? extends T>> array)throws ReflectionException {
+    public <T> Array<Class<?>> getSubTypesOf(Class<T> superClass, Array<Class<?>> array)throws ReflectionException {
         if(array == null)throw new ReflectionException("array can not be null.");
         if(superClass == null)throw new ReflectionException("superClass can not be null.");
 
         ClassLoader loader = classLoadingManager.getCurrentClassLoader();
         if(loader == null)throw new GdxRuntimeException("Loader can not be null.");
 
-        Reflections reflections = new Reflections(getPackageName(), loader);
+        Reflections reflections = new Reflections(packageName, loader);
         Set<Class <? extends T>> set = reflections.getSubTypesOf(superClass);
-        Class<? extends T>[] classes = new Class[0];
-        array.addAll(set.toArray(classes));
+        array.addAll(set.toArray(new Class<?>[0]));
         return array;
     }
 
 
-    public String getProjectPath() {
-        return projectPath;
-    }
-    public void setProjectPath(String projectPath, boolean compileAndLoad) throws Exception{
-        if(projectPath == null)throw new NullPointerException("Project path can't be null");
 
-        Path path = null;
-        try {
-            path = Paths.get(projectPath);
-        } catch (Exception e){
-            throw new GdxRuntimeException("Project path invalid: " + projectPath, e );
-        }
 
-        if(Files.exists(path) == false && path.toFile().mkdirs() == false)
-            throw new GdxRuntimeException("Could not create mkdirs from " + projectPath);
 
-        this.projectPath = projectPath;
-        this.init = false; // notify for re-init
-
-        if(compileAndLoad == false)return;
-        // try to compile and load
-        try {
-            compileAndLoad();
-        } catch (Exception e) {
-            log.error("Could not compile and load on setProjectPath(path).", e);
-        }
+    /**
+     * Changes are being read in the next {@link #compileAndLoad()} call.
+     * @return true if the given path differs from the current.
+     */
+    public boolean setSrcPath(Path srcPath) {
+        if(this.srcPath != null && this.srcPath.equals(srcPath))return false;
+        this.srcPath = srcPath;
+        init = false;
+        return true;
     }
 
-    public String getSrcPath() {
-        return projectPath + SRC_PATH;
+    public Path getSrcPath() {
+        return srcPath;
     }
 
-    public String getClassPath() {
-        return projectPath + CLASS_PATH;// + getPackageName();
+    /**
+     * Changes are being read in the next {@link #compileAndLoad()} call.
+     * @return true if the given path differs from the current.
+     */
+    public boolean setClassPath(Path classPath) {
+        if(this.classPath != null && this.classPath.equals(classPath))return false;
+        this.classPath = classPath;
+        init = false;
+        return true;
+    }
+
+    public Path getClassPath() {
+        return classPath;
+    }
+
+    /**
+     * Changes are being read in the next {@link #compileAndLoad()} call.
+     * @return true if the given name differs from the current.
+     */
+    public boolean setPackageName(String packageName) {
+        if(this.packageName != null && this.packageName.equals(packageName))return false;
+        this.packageName = packageName;
+        init = false;
+        return true;
     }
 
     public String getPackageName() {
-        String srcPath = getSrcPath().toString();
-        FileHandle current = Gdx.files.absolute(srcPath);
-
-        // get first sub dir with more than one child
-        while(current.list().length == 1){
-            current = current.list()[0];
-        }
-
-        // format name from </a/b/c> to <a.b.c>
-        Path relative = Paths.get(srcPath).relativize(current.file().toPath());
-        String name = relative.toString();
-        name = name.replace(File.separator, ".");
-        if(name.startsWith("."))name = name.substring(1);
-        if(name.endsWith("."))name = name.substring(0, name.length() -1);
-
-        return name;
+        return packageName;
     }
 
-    public String getAssetsPath(){
-        return projectPath + ASSETS_DIR;
-    }
+
 
 
     // -- debug --

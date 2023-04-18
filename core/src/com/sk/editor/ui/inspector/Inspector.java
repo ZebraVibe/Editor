@@ -40,6 +40,7 @@ public class Inspector extends UIBase {
     private ScriptManager scriptManager;
     private EditorManager editorManager;
     private @Null Entity currentEntity;
+    private @Null Table currentScrollContainer;
     private Rectangle clampCoord = new Rectangle();
 
 
@@ -347,11 +348,66 @@ public class Inspector extends UIBase {
     private Button createAddComponentButton() {
         TextButton button = createTextButton();
         button.setText("Add Comp");
+
         button.addListener(new ChangeListener() {
+            ScrollPane scroll;
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                //...
+                // hide list again
+                if(scroll != null){
+                    removeScroll();
+                    return;
+                }
+
+                // create component list
+                List<Class<? extends Component>> list = new List<>(skin){
+                    @Override
+                    public String toString(Class<? extends Component> object) {
+                        return object.getSimpleName();
+                    }
+                };
+                list.setSelected(null);
+                scroll = new ScrollPane(list, skin);
+                scroll.setFlickScroll(false);
+                scroll.setSize(getWidth(),128);
+
+
+                Array<Class<? extends Component>> componentTypes = arrayPool.obtain();
+                try {
+                    scriptManager.getSubTypesOf(Component.class, componentTypes);
+                    list.setItems(componentTypes);
+
+                    // debug
+                    log.debug("-----------------------------------------------");
+                    log.debug("Listing loaded scripts with super class: " + Component.class.getName());
+                    componentTypes.forEach(e -> log.debug(e.getName()));
+
+                    // add listener
+                    list.addListener(new ClickListener(){
+                        @Override
+                        public void clicked(InputEvent event, float x, float y) {
+                            Class<? extends Component> c = list.getSelected();
+                            log.debug("selecting from list: " + c);
+                            if(c == null)return;
+                            update(currentEntity, c);
+                            removeScroll();
+                        }
+                    });
+
+                    addActor(scroll);
+                    scroll.setPosition(0, 0, Align.topLeft);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                arrayPool.free(componentTypes);
             }
+
+            private void removeScroll(){
+                if(scroll == null)return;
+                scroll.remove();
+                scroll = null;
+            }
+
         });
         return button;
     }
@@ -397,17 +453,49 @@ public class Inspector extends UIBase {
 
     /**
      * May update the inspectors information via {@link #fill(Entity)}
-     * if the given inspected entity differs from
+     * if the current inspected entity differs from
      * the new selected one
      *
      * @param newSelected the entity which is inspected
-     * @return whether the refreshment was successfull
      */
-    public boolean update(@Null Entity newSelected) {
-        if (isCurrent(newSelected)) return false;
+    public <T extends Component> void update(@Null Entity newSelected, Class<T>...newComponentTypes) {
+        // update current content
+        if (isCurrent(newSelected)) {
+
+            // add new components to already selected
+            if(currentEntity != null && newComponentTypes != null){
+                for(Class<T> c : newComponentTypes){
+                    ComponentMapper<?> mapper =  currentEntity.getWorld().getMapper(c);
+
+                    // check if component is already present
+                    if(mapper.has(currentEntity)) {
+                        log.debug("Component " + c +" already added to entity");
+                        return;
+                    }
+
+                    // add component
+                    Component newComponent;
+                    log.debug("Creating component " + c +" for entity");
+                    try{
+                        newComponent = mapper.create(currentEntity);
+                    }catch (Exception e){
+                        log.error("Could not create component" + c, e);
+                        return;
+                    }
+
+                    if(currentScrollContainer != null){
+                        log.debug("Adding component " + c +" to entity");
+                        Actor componentContainer = createComponentContainer(newComponent);
+                        currentScrollContainer.add(componentContainer).row();
+                    }
+                }
+            }
+            return;
+        }
+
+        // fill with new content
         currentEntity = newSelected;
         fill(newSelected);
-        return true;
     }
 
     /**
@@ -471,10 +559,10 @@ public class Inspector extends UIBase {
         // Note: the inspectors' pad is set in EditorScreen for a coherent layout
 
         // create scrollPane
-        Table scrollContainer = new Table();
-        scrollContainer.top();
-        scrollContainer.defaults().expandX().fillX();
-        ScrollPane scrollPane = createScrollPane(scrollContainer);
+        currentScrollContainer = new Table();
+        currentScrollContainer.top();
+        currentScrollContainer.defaults().expandX().fillX();
+        ScrollPane scrollPane = createScrollPane(currentScrollContainer);
 
         // get components and fill bag
         Bag<Component> bag = Pools.obtain(Bag.class);
@@ -482,11 +570,11 @@ public class Inspector extends UIBase {
         entity.getComponents(bag);
         for (Component c : bag) {
             Actor componentContainer = createComponentContainer(c);
-            scrollContainer.add(componentContainer).row();
+            currentScrollContainer.add(componentContainer).row();
         }
         Pools.free(bag);
 
-        // create add button
+        // create add buttons
         Button addComponentButton = createAddComponentButton();
         Button addScriptButton = createAddScriptButton();
         Table buttons = new Table();

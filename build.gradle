@@ -16,7 +16,7 @@ buildscript {
 
     }
 }
-
+// quick and dirty deployment from project dir: ./gradlew desktop:dist
 allprojects {
     apply plugin: "eclipse"
 
@@ -137,5 +137,7 @@ project(":core") {
         api "net.onedaybeard.artemis:artemis-odb-serializer-json-libgdx:$artemisVersion" // added to use artemis serializer
         //api 'org.python:jython-slim:2.7.3'
         api "com.theokanning.openai-gpt3-java:service:$gpt3JavaVersion" // chat gpt3 integration
+
+        //implementation fileTree(dir: 'libs', include: '*.jar') // dir relative to project root (here we are in core dependencies -> core project)
     }
 }

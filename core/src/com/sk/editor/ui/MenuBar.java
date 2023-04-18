@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Logger;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.EditorManager;
@@ -78,72 +79,9 @@ public class MenuBar extends UIBase{
             }
         });
 
-        // source path button
-        TextButton srcPathButton = new TextButton("Src-path", skin);
-        srcPathButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                Window window = new UIWindow("Set Source Path", skin);
+        // project path Button
+        Actor projPathButton = createProjPathButton();
 
-                // src text field
-                Label srcLabel = new Label("source path:", skin);
-                TextField srcTF = new TextField("", skin);
-                srcTF.setMessageText("gdx v1.11.0, artemis v2.30");
-                String srcPath =  editorManager.getPrefKeys().SRC_PATH.get();
-                if(!srcPath.isEmpty())srcTF.setText(srcPath);
-
-                Table srcTable = new Table();
-                srcTable.add(srcLabel).spaceRight(1);
-                srcTable.add(srcTF).expandX().fillX();
-
-                // package name text field
-                Label packageLabel = new Label("package name:", skin);
-                TextField packageTF = new TextField("", skin);
-                packageTF.setMessageText("i.e. com.my.game");
-                String packageName =  editorManager.getPrefKeys().PACKAGE_NAME.get();
-                if(!packageName.isEmpty())packageTF.setText(packageName);
-
-                Table packageTable = new Table();
-                packageTable.add(packageLabel).spaceRight(1);
-                packageTable.add(packageTF).expandX().fillX();
-
-
-                // ok button
-                TextButton okButton = new TextButton("ok", skin);
-                okButton.addListener(new ChangeListener() {
-                    @Override
-                    public void changed(ChangeEvent event, Actor actor) {
-                        updateScriptManager(srcTF.getText(), packageTF.getText());
-                        Console console = uiStage.findUIActor(Console.class);
-                        if(console != null)console.setVisible(true);
-                    }
-                });
-
-                // close button
-                TextButton closeButton = new TextButton("close", skin);
-                closeButton.addListener(new ChangeListener() {
-                    @Override
-                    public void changed(ChangeEvent event, Actor actor) {
-                        window.remove();
-                    }
-                });
-
-                Table buttons = new Table();
-                buttons.defaults().expandX().fillX();
-                buttons.add(okButton).spaceRight(1);
-                buttons.add(closeButton);
-
-                window.pad(Config.DEFAULT_UI_PAD);
-                window.defaults().spaceBottom(1).expandX().fillX();
-                window.add(srcTable).row();
-                window.add(packageTable).row();
-                window.add(buttons);
-                window.setSize(512,256);
-
-                window.setPosition(event.getStage().getWidth() / 2f, event.getStage().getHeight() / 2f, Align.center);
-                event.getStage().addActor(window);
-            }
-        });
 
         // chatGPT button
         Actor chatGPTButton = createChatGPTButton();
@@ -154,8 +92,66 @@ public class MenuBar extends UIBase{
         // add to bar
         left();
         defaults().spaceRight(8);
-        add(saveButton, createButton, consoleButton, srcPathButton, chatGPTButton);
+        add(saveButton,
+                createButton,
+                consoleButton,
+                projPathButton,
+                chatGPTButton);
     }
+
+    private Actor createProjPathButton() {
+        TextButton button = new TextButton("Project-Path", getSkin());
+        button.addListener(new ChangeListener() {
+
+            UIWindow window;
+
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                // create
+                if(window == null){
+                    window = new UIWindow("Set Project Path", skin);
+
+                    // project text field
+                    Label projLabel = new Label("proj path:", skin);
+                    TextField projTF = new TextField("", skin);
+                    projTF.setMessageText("gdx v1.11.0, artemis v2.30");
+                    // get existing project path from prefs
+                    String projPath =  editorManager.getPrefKeys().PROJECT_PATH.get();
+                    if(!projPath.isEmpty())projTF.setText(projPath);
+
+                    Table projTable = new Table();
+                    projTable.add(projLabel).spaceRight(1);
+                    projTable.add(projTF).expandX().fillX();
+
+
+                    // ok button
+                    TextButton okButton = new TextButton("ok", skin);
+                    okButton.addListener(new ChangeListener() {
+                        @Override
+                        public void changed(ChangeEvent event, Actor actor) {
+                            updateScriptManager(projTF.getText());
+                            Console console = uiStage.findUIActor(Console.class);
+                            if(console != null)console.setVisible(true);
+                        }
+                    });
+
+                    window.pad(Config.DEFAULT_UI_PAD);
+                    window.defaults().spaceBottom(1).expandX().fillX();
+                    window.add(projTable).row();
+                    window.add(okButton);
+                    window.setSize(512,256);
+
+                    window.setPosition(event.getStage().getWidth() / 2f, event.getStage().getHeight() / 2f, Align.center);
+                    event.getStage().addActor(window);
+
+                } else { // change visibility
+                    window.setVisible(!window.isVisible());
+                }
+            }
+        });
+        return button;
+    }
+
 
     private Actor createChatGPTButton() {
         TextButton button = new TextButton("ChatGPT", skin);
@@ -311,48 +307,20 @@ public class MenuBar extends UIBase{
 
 
     /**
-     *
-     * @param srcDir
-     * @param packageName
+     * @param projectPath an absolute path to a libgdx project
      * @return true if the script manager could be successfully compiled and loaded
      */
-    private boolean updateScriptManager(String srcDir, String packageName){
-        Path newSrcPath = null;
-        Path newClassPath = null;
-        String newPackageName = packageName;
-
+    private boolean updateScriptManager(String projectPath){
         try {
-            newSrcPath = Paths.get(srcDir);
-            newClassPath = Paths.get(newSrcPath.getParent().toString(), Config.CLASS_PATH_DIR_NAME);
-        } catch (InvalidPathException e){
-            log.error("Path in invalid." + e.toString());
-            return false;
+            scriptManager.setProjectPath(projectPath, true);
+        } catch (Exception e){
+            throw new GdxRuntimeException(e);
         }
+        // update prefs
+        editorManager.getPrefKeys().PROJECT_PATH.set(projectPath);
 
-        if(scriptManager.setSrcPath(newSrcPath)){
-            // update prefs
-            editorManager.getPrefKeys().SRC_PATH.set(newSrcPath.toString());
-        }
-        if(scriptManager.setClassPath(newClassPath)){
-            // update prefs
-            editorManager.getPrefKeys().CLASS_PATH.set(newClassPath.toString());
-        }
-        if(scriptManager.setPackageName(packageName)){
-            // update prefs
-            editorManager.getPrefKeys().PACKAGE_NAME.set(packageName);
-        }
-
-        boolean success = false;
-
-        try {
-            success = scriptManager.compileAndLoad();
-        } catch (Exception e) {
-            log.error("Could not compile and load. ", e);
-            return false;
-        }
-        if (success)scriptManager.debugLoadedClasses();
+        // debug
+        scriptManager.debugLoadedClasses();
         return true;
     }
-
-
 }

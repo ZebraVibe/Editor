@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -56,6 +57,9 @@ public class LoadingScreen extends ScreenAdapter {
 	private void loadAssets() {
 		// texture atlas
 		assets.load(AssetDescriptors.UI);
+
+		// badlogic
+		assets.load("badlogic.jpg", Texture.class);
 
 		// fonts
 		Fonts fonts = editor.getFonts();
@@ -307,6 +311,13 @@ public class LoadingScreen extends ScreenAdapter {
 
 		skin.add(SkinNames.DEFAULT, uiTreeStyle);
 
+		// list
+		List.ListStyle listStyle = new List.ListStyle();
+		listStyle.font = defaultFont;
+		listStyle.over = whiteDrawable.tint(green.cpy().add(0,0,0,-0.5f));
+		listStyle.selection = whiteDrawable.tint(darkestGray);
+
+		skin.add(SkinNames.LIST_STYLE, listStyle);
 	}
 
 	@Override

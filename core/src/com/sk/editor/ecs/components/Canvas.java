@@ -2,6 +2,7 @@ package com.sk.editor.ecs.components;
 
 import com.artemis.Component;
 import com.artemis.Entity;
+import com.artemis.PooledComponent;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Matrix4;
@@ -15,12 +16,11 @@ import com.sk.editor.ui.UIStage;
 import com.sk.editor.ui.logger.EditorLogger;
 import com.sk.editor.utils.RenderMode;
 
-public class Canvas extends Component {
+public class Canvas extends Script{
 
-    private static final EditorLogger log = new EditorLogger(Canvas.class.toString(), Logger.DEBUG);
+    private transient static final EditorLogger log = new EditorLogger(Canvas.class.toString(), Logger.DEBUG);
 
-    private Viewport viewport;
-    private RenderMode renderMode;
+    private transient Viewport viewport;
 
     /**
      * whether the camera should be centered on resize
@@ -34,6 +34,7 @@ public class Canvas extends Component {
     public Canvas(){
         this.viewport = createViewport();
     }
+
 
     // -- viewport --
     private Viewport createViewport(){

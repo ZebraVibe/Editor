@@ -16,12 +16,12 @@ import com.sk.editor.utils.UIUtils;
 
 import java.util.Comparator;
 
-public class Transform extends PooledComponent {
+public class Transform extends Script {
 
-    private final static TransformComparator comparator = new TransformComparator();
+    private transient final static TransformComparator comparator = new TransformComparator();
 
-    private final Rectangle bounds = new Rectangle();
-    private final Vector2 tmp = new Vector2();
+    private transient final Rectangle bounds = new Rectangle();
+    private transient final Vector2 tmp = new Vector2();
 
     /**
      * The entity holding this component.
@@ -29,10 +29,8 @@ public class Transform extends PooledComponent {
      * is changed to the entity holding the component.
      * This is set in @{@link com.sk.editor.ecs.systems.TransformSystem}
      */
-    @Nonnull
-    public final Entity entity = null;
-    @Null
-    public Entity parent;
+    public Entity entity;
+    public @Null Entity parent;
     public Bag<Entity> children = new Bag<>();
     @Nonnull
     @SerializeField
@@ -51,6 +49,12 @@ public class Transform extends PooledComponent {
     private boolean childrenChanged;
 
 
+
+    // -- entity --
+
+    private Entity getNullEntity(){
+        return null;
+    }
 
 
     // -- name --
@@ -604,14 +608,7 @@ public class Transform extends PooledComponent {
 
         children.clear();
         parent = null;
-
-        // set entity back to null using reflection
-        try {
-            Field entityField = ClassReflection.getDeclaredField(getClass(), "entity");
-            entityField.setAccessible(true);
-            entityField.set(this, null);
-            entityField.setAccessible(false);
-        } catch (ReflectionException e) {}
+        entity = null;
 
 
         x = 0;

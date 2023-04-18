@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -51,7 +52,7 @@ public class EditorScreen extends ScreenAdapter {
     private NotifyingOrthographicCamera ecsCamera;
     private Viewport uiViewport, ecsViewport;
     private Skin skin;
-    private Texture repeatingGridTexture, badlogic;
+    private Texture repeatingGridTexture;
     private ECSManager ecsManager;
     private EditorManager editorManager;
     private InputManager inputManager;
@@ -91,7 +92,6 @@ public class EditorScreen extends ScreenAdapter {
         //gridTexture = new Texture(Gdx.files.internal("grid.png"));
         TextureRegion gridRegion = atlas.findRegion(RegionNames.GRID);
         repeatingGridTexture = createRepeatingTextureFromRegion(gridRegion);
-        badlogic = new Texture(Gdx.files.internal("badlogic.jpg"));
 
     }
 
@@ -120,14 +120,7 @@ public class EditorScreen extends ScreenAdapter {
         setupUIActor(console);
         console.setVisible(false);
 
-        EditorLogger.addListener(new LoggerListener(){
-            @Override
-            public void onLog(LoggerListener.LoggerEvent event) {
-                String prefix = "[" + event.getTag() + "] ";
-                String text = prefix + event.getMessage();
-                console.print(text, event.getLevel());
-            }
-        });
+        EditorLogger.addListener(console);
 
 
         console.setSize(512, 256);
@@ -136,8 +129,16 @@ public class EditorScreen extends ScreenAdapter {
 
     private void initManagers(){
         // create script manager before console and before ecs manager to compile and load
-        scriptManager = new ScriptManager();
-        setupScriptManager(scriptManager);
+        // uses default project path
+        String projectPath = editorManager.getPrefKeys().PROJECT_PATH.get();
+        if(projectPath.isEmpty()){
+            FileHandle projDir = Gdx.files.external(Config.DEFAULT_PROJECT_DIR);
+            if(projDir.exists() == false)projDir.mkdirs();
+            projectPath = projDir.file().getAbsolutePath();
+            editorManager.getPrefKeys().PROJECT_PATH.set(projectPath);
+        }
+        scriptManager = new ScriptManager(projectPath);
+        //setupScriptManager(scriptManager);
 
         // ecs
         // TODO: ecs manager has to inject dependencies for script manager loaded classes on each recompile and load
@@ -151,7 +152,10 @@ public class EditorScreen extends ScreenAdapter {
         inputManager.setTouchable(Touchable.enabled);
     }
 
+    @Deprecated
     private void setupScriptManager(ScriptManager manager){
+        /*
+        String projPath = editorManager.getPrefKeys().PROJECT_PATH.get();
         String srcPath =  editorManager.getPrefKeys().SRC_PATH.get();
         String classPath =  editorManager.getPrefKeys().CLASS_PATH.get();
         String packageName =  editorManager.getPrefKeys().PACKAGE_NAME.get();
@@ -176,7 +180,7 @@ public class EditorScreen extends ScreenAdapter {
             } catch (Exception e) {
                 log.error("Could not initially compile and load!", e);
             }
-        }
+        }*/
     }
 
     private void initActors() {
@@ -363,7 +367,7 @@ public class EditorScreen extends ScreenAdapter {
             transform.setSize(100,100);
             transform.setPosition(ecsCamera.position.x, ecsCamera.position.y);
             Image image = ecsManager.edit(entity).create(Image.class);
-            image.region = new TextureRegion(badlogic);
+            image.setRegion(new TextureRegion(assets.get("badlogic.jpg", Texture.class)));
         }
 
         // saving (ctrl + s)
@@ -389,7 +393,6 @@ public class EditorScreen extends ScreenAdapter {
         ecsStage.dispose();
         uiStage.dispose();
         repeatingGridTexture.dispose();
-        badlogic.dispose();
         //roundedCorners.dispose();
         //roundedCornersShadow.dispose();
         ecsManager.dispose();

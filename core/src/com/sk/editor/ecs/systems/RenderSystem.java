@@ -63,12 +63,12 @@ public class RenderSystem extends CanvasSystem {
 		batch.flush();
 
 		// draw self
-		if(image != null && image.region != null){
+		if(image != null && image.getRegion() != null){
 			Vector2 worldCoord = Pools.obtain(Vector2.class);
 			worldCoord.set(transform.x, transform.y);
 			transform.parentToWorldCoord(worldCoord); // TODO: improve with transform matrix ?
 
-			batch.draw(image.region,
+			batch.draw(image.getRegion(),
 					worldCoord.x,
 					worldCoord.y,
 					0,

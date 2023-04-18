@@ -6,13 +6,15 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Logger;
-import com.badlogic.gdx.utils.Null;
 import com.sk.editor.config.Config;
 import com.sk.editor.ui.UILabel;
 import com.sk.editor.ui.UIWindow;
+import com.sk.editor.ui.logger.LoggerListener;
 
-public class Console extends UIWindow {
+public class Console extends UIWindow implements LoggerListener {
 
     private Table content;
     private TextField commandLine;
@@ -89,6 +91,23 @@ public class Console extends UIWindow {
         currentLabel.invalidateHierarchy();
 
         // scroll to bottom
+        scrollToBottom();
+    }
+
+    public TextButton printPressable(String text){
+        currentLabel = null;
+        TextButton button = new TextButton(text, getSkin());
+
+        content.add(button).row();
+        button.invalidateHierarchy();
+
+        // scroll to bottom
+        scrollToBottom();
+        return button;
+    }
+
+
+    public void scrollToBottom(){
         scroll.layout();
         scroll.setScrollPercentY(1);
     }
@@ -102,4 +121,28 @@ public class Console extends UIWindow {
     }
 
 
+    @Override
+    public void onLog(LoggerEvent event) {
+        String prefix = "[" + event.getTag() + "] ";
+        String text = prefix + event.getMessage();
+        Array metaInfo = event.getMetaInfo();
+
+        // check if is pressable
+        if(metaInfo.contains("button", false)){
+            TextButton button =  printPressable(text);
+
+            for(Object obj : metaInfo){
+                if(obj instanceof Runnable){
+                    addListener(new ChangeListener() {
+                        @Override
+                        public void changed(ChangeEvent event, Actor actor) {
+                            ((Runnable)obj).run();
+                        }
+                    });
+                }
+            }
+            return;
+        }
+        print(text, event.getLevel());
+    }
 }

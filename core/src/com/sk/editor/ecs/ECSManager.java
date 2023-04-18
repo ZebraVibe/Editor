@@ -1,6 +1,7 @@
 package com.sk.editor.ecs;
 
 import com.artemis.*;
+import com.artemis.io.ComponentLookupSerializer;
 import com.artemis.io.JsonArtemisSerializer;
 import com.artemis.io.SaveFileFormat;
 import com.artemis.link.EntityLinkManager;
@@ -12,14 +13,19 @@ import com.artemis.utils.IntBag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.Method;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.sk.editor.Editor;
 import com.sk.editor.config.Config;
 import com.sk.editor.ecs.components.Canvas;
 import com.sk.editor.ecs.components.Transform;
 import com.sk.editor.ecs.systems.*;
+import com.sk.editor.ecs.utils.CustomJsonArtemisSerializer;
 import com.sk.editor.ui.NotifyingOrthographicCamera;
 import com.sk.editor.ui.UIStage;
 import com.sk.editor.ui.logger.EditorLogger;
@@ -63,7 +69,7 @@ public class ECSManager implements NotifyingOrthographicCamera.CameraListener {
                         this.worldSerializationManager = new WorldSerializationManager(),
                         this.entityLinkManager = new EntityLinkManager(),
                         new TransformSystem(),
-                        new ScriptSystem(),
+                        //new ScriptSystem(),
                         new RenderSystem(editor.getBatch(), editor.getEditorManager(), ecsViewport),
                         new DebugSystem(editor.getShapeRenderer(),  editor.getEditorManager(), ecsViewport))
                 .build();
@@ -80,9 +86,15 @@ public class ECSManager implements NotifyingOrthographicCamera.CameraListener {
     }
 
     private void setupWorldSerializationManager() {
-        worldSerializationManager.setSerializer(new JsonArtemisSerializer(world));
+        // for be able to de-/serialize components etc. from class loader loading the
+        // external projects' classes as well
+        JsonArtemisSerializer serializer = new CustomJsonArtemisSerializer(world);
 
+        // texture region
+        serializer.register(TextureRegion.class, new TextureRegionSerializer(editor.getAssetManager()));
+        worldSerializationManager.setSerializer(serializer);
     }
+
 
     private void setupEntityLinkManager(){
         // -- register link listeners --
@@ -185,7 +197,7 @@ public class ECSManager implements NotifyingOrthographicCamera.CameraListener {
      * @param subscription
      * @return the JSON string
      */
-    private String saveToString(EntitySubscription subscription){
+    private String saveToString(EntitySubscription subscription) throws Exception {
         return saveToString(subscription.getEntities());
     }
 
@@ -194,22 +206,21 @@ public class ECSManager implements NotifyingOrthographicCamera.CameraListener {
      * @param intBag
      * @return the JSON string
      */
-    private String saveToString(IntBag intBag){
-        try {
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            final SaveFileFormat save = new SaveFileFormat(intBag);
-            worldSerializationManager.save(bos, save);
-            String json = new String(bos.toByteArray());
-            log.debug("Saving successful.");
-            return json;
-        } catch (Exception e){
-            log.error("Saving Failed.");
-        }
-        return "";
+    private String saveToString(IntBag intBag) throws Exception {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final SaveFileFormat save = new SaveFileFormat(intBag);
+        worldSerializationManager.save(bos, save);
+        String json = new String(bos.toByteArray());
+        return json;
     }
     private void saveToPrefs(IntBag entities){
-        String json = saveToString(entities);
-        editor.getEditorManager().getPrefKeys().WORLD_SERIALIZATION.set(json);
+        try {
+            String json = saveToString(entities);
+            editor.getEditorManager().getPrefKeys().WORLD_SERIALIZATION.set(json);
+            log.debug("Saving successful.");
+        } catch (Exception e) {
+            log.error("Saving Failed.", e);
+        }
     }
     private void loadFromPrefs(){
         String json = editor.getEditorManager().getPrefKeys().WORLD_SERIALIZATION.get();
@@ -307,7 +318,6 @@ public class ECSManager implements NotifyingOrthographicCamera.CameraListener {
             transform.parentToLocalCoord(localCoord);
             Transform hit = transform.hit(localCoord.x, localCoord.y);
             if(hit != null)return hit.entity;
-            log.debug("hitScreen(): hit is null");
         }
         Pools.free(localCoord);
         rootEntities.clear();

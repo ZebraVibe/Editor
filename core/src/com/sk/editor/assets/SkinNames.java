@@ -52,6 +52,9 @@ public class SkinNames {
 	// scroll pane
 	SCROLL_PANE_STYLE = DEFAULT,
 
+	// list
+	LIST_STYLE = DEFAULT,
+
 	// tree
 	TREE_STYLE = DEFAULT;
 

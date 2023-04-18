@@ -31,13 +31,11 @@ public class Config {
 	/**
 	 * used with Files.FileType.External
 	 */
-	public static String EDITOR_PREFERENCES_DIR = "/.prefs/" + EDITOR_PREFERENCES_NAME +"/";
-
-	/**
-	 * used with Files.FileType.External
-	 */
-	@Deprecated
-	public static String WORLD_SAVE_FILE = EDITOR_PREFERENCES_DIR + "world";
+	public static String
+			EDITOR_PREFERENCES_DIR = "/.prefs/" + EDITOR_PREFERENCES_NAME +"/",
+			WORLD_SAVE_FILE = EDITOR_PREFERENCES_DIR + "world",
+			PROJECTS_DIR = EDITOR_PREFERENCES_DIR + "projects/",
+			DEFAULT_PROJECT_DIR = PROJECTS_DIR + "My-Project/";
 
 
 	private Config() {}
