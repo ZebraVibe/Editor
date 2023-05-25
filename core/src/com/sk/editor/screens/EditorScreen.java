@@ -1,7 +1,6 @@
 package com.sk.editor.screens;
 
 import com.artemis.Entity;
-import com.artemis.EntityEdit;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
@@ -24,20 +23,16 @@ import com.sk.editor.assets.AssetDescriptors;
 import com.sk.editor.assets.RegionNames;
 import com.sk.editor.config.Config;
 import com.sk.editor.ecs.ECSManager;
-import com.sk.editor.ecs.components.Canvas;
 import com.sk.editor.scripting.ScriptManager;
 import com.sk.editor.ui.*;
 import com.sk.editor.ui.console.Console;
+import com.sk.editor.ui.content.ContentBrowser;
 import com.sk.editor.ui.listeners.ResizeListener;
 import com.sk.editor.ui.inspector.Inspector;
 import com.sk.editor.ui.logger.EditorLogger;
-import com.sk.editor.ui.logger.LoggerListener;
 import com.sk.editor.ui.hierarchy.Hierarchy;
 import com.sk.editor.ecs.components.Image;
 import com.sk.editor.ecs.components.Transform;
-
-import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
 
 public class EditorScreen extends ScreenAdapter {
 
@@ -61,6 +56,7 @@ public class EditorScreen extends ScreenAdapter {
     private Inspector inspector;
     private Console console;
     private Hierarchy hierarchy;
+    private ContentBrowser contentBrowser;
 
     public EditorScreen(Editor editor) {
         this.editor = editor;
@@ -131,13 +127,15 @@ public class EditorScreen extends ScreenAdapter {
         // create script manager before console and before ecs manager to compile and load
         // uses default project path
         String projectPath = editorManager.getPrefKeys().PROJECT_PATH.get();
+        /*
         if(projectPath.isEmpty()){
             FileHandle projDir = Gdx.files.external(Config.DEFAULT_PROJECT_DIR);
             if(projDir.exists() == false)projDir.mkdirs();
             projectPath = projDir.file().getAbsolutePath();
             editorManager.getPrefKeys().PROJECT_PATH.set(projectPath);
-        }
-        scriptManager = new ScriptManager(projectPath);
+        }*/
+        //TODO: when using default path Gdx.files.external would be needed. fix smh
+        scriptManager = new ScriptManager(Gdx.files.absolute(projectPath));
         //setupScriptManager(scriptManager);
 
         // ecs
@@ -210,11 +208,21 @@ public class EditorScreen extends ScreenAdapter {
         Actor menuBar = createMenuBar();
         Actor inspector = createInspector();
         Actor hierarchy = createHierarchy();
+        Actor contentBrowser = createContentBrowser();
+        //contentBrowser.setX(hierarchy.getWidth());
 
         uiStage.addUIActor(console, console.getClass());
         uiStage.addUIActor(menuBar, menuBar.getClass());
         uiStage.addUIActor(hierarchy, hierarchy.getClass());
         uiStage.addUIActor(inspector, inspector.getClass());
+        uiStage.addUIActor(contentBrowser, contentBrowser.getClass());
+    }
+
+    private Actor createContentBrowser() {
+        contentBrowser = new ContentBrowser(skin, scriptManager, assets);
+        setupUIActor(contentBrowser);
+        contentBrowser.padTop(contentBrowser.getPadTop() * 2);
+        return contentBrowser;
     }
 
 
@@ -348,7 +356,7 @@ public class EditorScreen extends ScreenAdapter {
     public void render(float delta) {
         ScreenUtils.clear(Color.GRAY);
 
-        updateDebugInput();
+        updateInput();
         ecsViewport.apply();
         ecsStage.act();
         ecsStage.draw();
@@ -358,8 +366,16 @@ public class EditorScreen extends ScreenAdapter {
         uiStage.draw();
     }
 
-    private void updateDebugInput() {
+    private void updateInput() {
+        updateDebugInput();
 
+        // saving (ctrl + s)
+        if(Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.S)){
+            ecsManager.saveWorld();
+        }
+    }
+
+    private void updateDebugInput(){
         // create entity
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             Entity entity = ecsManager.createCanvas();
@@ -370,9 +386,9 @@ public class EditorScreen extends ScreenAdapter {
             image.setRegion(new TextureRegion(assets.get("badlogic.jpg", Texture.class)));
         }
 
-        // saving (ctrl + s)
-        if(Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) && Gdx.input.isKeyJustPressed(Input.Keys.S)){
-            ecsManager.saveWorld();
+        // print window size
+        if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
+            //log.debug("window size: " + Gdx.graphics.getWidth() + ", " + Gdx.graphics.getHeight());
         }
     }
 

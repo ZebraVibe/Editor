@@ -31,6 +31,7 @@ allprojects {
         gdxControllersVersion = '2.2.1'
         artemisVersion = '2.3.0'
         gpt3JavaVersion = '0.11.0'
+        jnaVersion = '5.7.0'//'5.13.0'
     }
 
     repositories {
@@ -57,7 +58,8 @@ project(":desktop") {
         api "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:$gdxControllersVersion"
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-tools:$gdxVersion" // added to use Texturepacker
-        
+        api "net.java.dev.jna:jna:$jnaVersion" // to add title bar decoration
+        api "net.java.dev.jna:jna-platform:$jnaVersion" // to add title bar decoration
     }
 }
 

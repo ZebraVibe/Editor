@@ -24,7 +24,7 @@ import com.sk.editor.scripting.ScriptManager;
 import com.sk.editor.ui.UIBase;
 import com.sk.editor.ui.logger.EditorLogger;
 import com.sk.editor.utils.ArrayPool;
-import com.sk.editor.utils.UIUtils;
+import com.sk.editor.utils.EditorUtils;
 import com.sk.editor.ecs.components.Transform;
 
 public class Inspector extends UIBase {
@@ -60,7 +60,7 @@ public class Inspector extends UIBase {
      */
     private Array<Actor> createAllFieldWidgets(Object obj) {
         Class cls = obj.getClass();
-        Field[] fields = UIUtils.getFieldsOf(cls);
+        Field[] fields = EditorUtils.getFieldsOf(cls);
         Array<Actor> actors = new Array<>();
 
         //log.debug("Collecting fields of: " + cls.getSimpleName());
@@ -136,7 +136,7 @@ public class Inspector extends UIBase {
             Label label = createLabel(obj, field);// sets widget name too
 
             TextField.TextFieldStyle tfStyle = new TextField.TextFieldStyle(skin.get(TextField.TextFieldStyle.class));
-            String value = "" + UIUtils.getFieldValue(field, obj);
+            String value = "" + EditorUtils.getFieldValue(field, obj);
             TextField tf = new TextField(value, tfStyle);
             // set widget name
             tf.setName(field.getName());
@@ -150,13 +150,13 @@ public class Inspector extends UIBase {
                         return;
 
                     try {
-                        UIUtils.setFieldValue(field, obj, parsePrimitiveType(tf.getText(), field.getType()));
+                        EditorUtils.setFieldValue(field, obj, parsePrimitiveType(tf.getText(), field.getType()));
                         //log.debug("Changing field value on focus lost");
                     } catch (Exception e) {
                         //log.error("[!!] Resetting value since couldnt set field value");
 
                         try {// reset value
-                            tf.setText("" + UIUtils.getFieldValue(field, obj));
+                            tf.setText("" + EditorUtils.getFieldValue(field, obj));
                         } catch (Exception e1) {
                             log.error("Could not reset value!");
                             e1.printStackTrace();
@@ -184,7 +184,7 @@ public class Inspector extends UIBase {
                 @Override
                 public boolean keyTyped(InputEvent event, char character) {
                     try {
-                        UIUtils.setFieldValue(field, obj, parsePrimitiveType(tf.getText(), field.getType()));
+                        EditorUtils.setFieldValue(field, obj, parsePrimitiveType(tf.getText(), field.getType()));
                         //log.debug("Changing field value");
                     } catch (Exception e) {
                         log.error("Could not set value!");
@@ -230,7 +230,7 @@ public class Inspector extends UIBase {
         box.add(img).expandX();
 
         try {
-            box.setChecked((boolean) UIUtils.getFieldValue(field, obj));
+            box.setChecked((boolean) EditorUtils.getFieldValue(field, obj));
         } catch (Exception e) {
             log.error("[!!] couldnt change checked state of checkbox");
             e.printStackTrace();
@@ -241,7 +241,7 @@ public class Inspector extends UIBase {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 try {
-                    UIUtils.setFieldValue(field, obj, box.isChecked());
+                    EditorUtils.setFieldValue(field, obj, box.isChecked());
                     //log.debug("Changing field value");
                 } catch (Exception e) {
                     log.error("could not change checked state of checkbox on click");
@@ -258,7 +258,7 @@ public class Inspector extends UIBase {
      * @return
      */
     private Label createLabel(Object obj, Field field) {
-        String text = UIUtils.getNameOfSerializedFieldIfPresent(field);
+        String text = EditorUtils.getNameOfSerializedFieldIfPresent(field);
         Label label = createLabel(text);
         return label;
     }
@@ -513,14 +513,14 @@ public class Inspector extends UIBase {
         if (currentEntity == null) return false;
         try {
             Object obj = mapper.get(currentEntity);
-            Field field = UIUtils.getDeclaredFieldOf(componentType, fieldName);
+            Field field = EditorUtils.getDeclaredFieldOf(componentType, fieldName);
 
             Actor widget = findFieldValueWidget(componentType, fieldName);
             if (widget == null) throw new GdxRuntimeException("widget not found");
 
             Object value;
             try {
-                value = UIUtils.getFieldValue(field, obj);
+                value = EditorUtils.getFieldValue(field, obj);
             } catch (Exception e) {
                 throw new GdxRuntimeException("could not get field value");
             }

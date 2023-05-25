@@ -52,6 +52,11 @@ public class SkinNames {
 	// scroll pane
 	SCROLL_PANE_STYLE = DEFAULT,
 
+	// split pane
+	SPLIT_PANE_VERTICAL = DEFAULT + "-vertical",
+	SPLIT_PANE_HORIZONTAL = DEFAULT + "-horizontal",
+
+
 	// list
 	LIST_STYLE = DEFAULT,
 

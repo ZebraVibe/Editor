@@ -54,11 +54,11 @@ public class EntityNode extends UINode<EntityNode, Entity>{
 
     /**
      * @param text
-     * @param changeEntityTag if true sets the entity as well
+     * @param changeEntityName if true sets it for the entity as well
      * @throws ReflectionException
      */
-    public void setText(String text, boolean changeEntityTag) {
-        if(changeEntityTag){
+    public void setText(String text, boolean changeEntityName) {
+        if(changeEntityName){
             transform.setName(text);
         }
         setText(text);

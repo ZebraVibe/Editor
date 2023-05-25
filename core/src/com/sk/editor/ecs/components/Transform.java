@@ -1,18 +1,13 @@
 package com.sk.editor.ecs.components;
 
-import com.artemis.PooledComponent;
 import com.artemis.utils.Bag;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Null;
-import com.badlogic.gdx.utils.reflect.ClassReflection;
-import com.badlogic.gdx.utils.reflect.Field;
-import com.badlogic.gdx.utils.reflect.ReflectionException;
 import com.sk.editor.ui.inspector.SerializeField;
 import com.sk.editor.ecs.utils.Align;
 import com.artemis.Entity;
 import com.sk.editor.utils.Nonnull;
-import com.sk.editor.utils.UIUtils;
 
 import java.util.Comparator;
 

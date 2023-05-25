@@ -117,6 +117,7 @@ public class LoadingScreen extends ScreenAdapter {
 		TextureRegion checkBoxUnchecked = atlas.findRegion(RegionNames.CHECK_BOX_UNCHECKED);
 		TextureRegion checkBoxChecked = atlas.findRegion(RegionNames.CHECK_BOX_CHECKED);
 
+		
 		//skin.add(SkinNames.PIXEL_REGION, pixelRegion, TextureRegion.class);
 		skin.addRegions(atlas);
 
@@ -242,6 +243,14 @@ public class LoadingScreen extends ScreenAdapter {
 		scrollPaneStyle.hScrollKnob = scrollPaneStyle.vScrollKnob = new SpriteDrawable(scrollKnobSprite);
 
 		skin.add(SkinNames.SCROLL_PANE_STYLE, scrollPaneStyle); // name = "default"
+
+		// split pane
+		SplitPane.SplitPaneStyle splitPaneStyle = new SplitPane.SplitPaneStyle();
+		splitPaneStyle.handle = whiteDrawable.tint(lightGray);
+
+		skin.add(SkinNames.SPLIT_PANE_VERTICAL, splitPaneStyle);
+		skin.add(SkinNames.SPLIT_PANE_HORIZONTAL, splitPaneStyle);
+
 
 		// button
 		Button.ButtonStyle buttonStyle = new Button.ButtonStyle();

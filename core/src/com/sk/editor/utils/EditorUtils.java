@@ -12,13 +12,13 @@ import com.badlogic.gdx.utils.reflect.*;
 import com.sk.editor.ui.inspector.InvokeMethod;
 import com.sk.editor.ui.inspector.SerializeField;
 
-public class UIUtils {
+public class EditorUtils {
 
-    private static final Logger log = new Logger(UIUtils.class.getName(), Logger.DEBUG);
+    private static final Logger log = new Logger(EditorUtils.class.getName(), Logger.DEBUG);
 
     private static final Array<Object> tmpObjects = new Array<Object>();
 
-    private UIUtils() {
+    private EditorUtils() {
     }
 
 
@@ -56,7 +56,7 @@ public class UIUtils {
         if (data instanceof FileTextureData) {
             FileTextureData fileData = (FileTextureData) data;
             String name = fileData.getFileHandle().nameWithoutExtension();
-            name = UIUtils.getFormattedName(name, maxLength);
+            name = EditorUtils.getFormattedName(name, maxLength);
             return name;
         }
         log.error("unknown region name when tried to create name from texture");
@@ -177,6 +177,8 @@ public class UIUtils {
         }
 
     }
+
+
 
 
 }

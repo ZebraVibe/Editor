@@ -7,7 +7,9 @@ import com.sk.editor.utils.ColorConverter;
 public class Config {
 
 	// window size
-	public static final int WIDTH = 1280, HEIGHT = 720;
+	public static final int
+			WIDTH = 720, // 348
+			HEIGHT = 480; // 572
 
 	// colors
 	public static final Color

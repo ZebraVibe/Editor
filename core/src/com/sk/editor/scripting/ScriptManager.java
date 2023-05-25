@@ -24,7 +24,7 @@ public class ScriptManager {
     private final String CORE_DIR = "/core";
     private final String SRC_PATH = CORE_DIR + "/src";
     private final String CLASS_PATH = CORE_DIR + "/" + Config.CLASS_PATH_DIR_NAME;
-    private String projectPath;
+    private FileHandle projectPath;
 
     private FileTreeWalker fileTreeWalker;
     private ClassLoadingManager classLoadingManager;
@@ -36,7 +36,7 @@ public class ScriptManager {
     /**
      * @param projectPath the absolute path of the project directory containing core, assets and desktop dir
      */
-    public ScriptManager(String projectPath){
+    public ScriptManager(FileHandle projectPath){
         // #init called in compile and load
         try {
             setProjectPath(projectPath, true); // tries to compile and load
@@ -50,8 +50,8 @@ public class ScriptManager {
         log.debug("Initializing " + getClass().getSimpleName());
 
         // check project path must be set yet
-        Path srcPath = Paths.get(getSrcPath());
-        Path classPath = Paths.get(getClassPath());
+        Path srcPath = getSrcPath().file().toPath();//Paths.get(getSrcPath());
+        Path classPath = getClassPath().file().toPath();//Paths.get(getClassPath());
         String packageName = getPackageName();
 
 
@@ -196,15 +196,15 @@ public class ScriptManager {
     }
 
 
-    public String getProjectPath() {
+    public FileHandle getProjectPath() {
         return projectPath;
     }
-    public void setProjectPath(String projectPath, boolean compileAndLoad) throws Exception{
+    public void setProjectPath(FileHandle projectPath, boolean compileAndLoad) throws Exception{
         if(projectPath == null)throw new NullPointerException("Project path can't be null");
 
         Path path = null;
         try {
-            path = Paths.get(projectPath);
+            path = projectPath.file().toPath();//Paths.get(projectPath);
         } catch (Exception e){
             throw new GdxRuntimeException("Project path invalid: " + projectPath, e );
         }
@@ -224,12 +224,12 @@ public class ScriptManager {
         }
     }
 
-    public String getSrcPath() {
-        return projectPath + SRC_PATH;
+    public FileHandle getSrcPath() {
+        return projectPath.child(SRC_PATH);
     }
 
-    public String getClassPath() {
-        return projectPath + CLASS_PATH;// + getPackageName();
+    public FileHandle getClassPath() {
+        return projectPath.child(CLASS_PATH);// + getPackageName();
     }
 
     public String getPackageName() {
@@ -251,8 +251,8 @@ public class ScriptManager {
         return name;
     }
 
-    public String getAssetsPath(){
-        return projectPath + ASSETS_DIR;
+    public FileHandle getAssetsPath(){
+        return projectPath.child(ASSETS_DIR);
     }
 
 

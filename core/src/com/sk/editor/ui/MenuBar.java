@@ -1,7 +1,9 @@
 package com.sk.editor.ui;
 
 import com.artemis.Entity;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -129,7 +131,7 @@ public class MenuBar extends UIBase{
                     okButton.addListener(new ChangeListener() {
                         @Override
                         public void changed(ChangeEvent event, Actor actor) {
-                            updateScriptManager(projTF.getText());
+                            updateScriptManager(Gdx.files.absolute(projTF.getText()));
                             Console console = uiStage.findUIActor(Console.class);
                             if(console != null)console.setVisible(true);
                         }
@@ -310,14 +312,14 @@ public class MenuBar extends UIBase{
      * @param projectPath an absolute path to a libgdx project
      * @return true if the script manager could be successfully compiled and loaded
      */
-    private boolean updateScriptManager(String projectPath){
+    private boolean updateScriptManager(FileHandle projectPath){
         try {
             scriptManager.setProjectPath(projectPath, true);
         } catch (Exception e){
             throw new GdxRuntimeException(e);
         }
         // update prefs
-        editorManager.getPrefKeys().PROJECT_PATH.set(projectPath);
+        editorManager.getPrefKeys().PROJECT_PATH.set(projectPath.path());
 
         // debug
         scriptManager.debugLoadedClasses();
