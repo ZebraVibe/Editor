@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.*;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.TimerTask;
 
 public class FileWatcher {
@@ -25,7 +26,7 @@ public class FileWatcher {
     private final Array<FileEvent> events = new Array<>();
     private WatchService watchService;
     private java.util.Timer watchServiceTimer;
-    private FileTreeWalker fileWalker;
+    //private FileTreeWalker fileWalker;
     private Path startDir;
     private boolean hasTask;
 
@@ -38,12 +39,11 @@ public class FileWatcher {
      * Call {@link #start()} to start the watchservice & its thread
      *
      * @param dir        to watch
-     * @param fileWalker
      * @throws Exception
      */
-    public FileWatcher(Path dir, FileTreeWalker fileWalker) throws Exception {
+    public FileWatcher(Path dir) throws Exception {
         watchService = FileSystems.getDefault().newWatchService();
-        this.fileWalker = fileWalker;
+        //this.fileWalker = fileWalker;
         this.startDir = dir;
         watchServiceTimer = new java.util.Timer(true);
     }
@@ -120,12 +120,28 @@ public class FileWatcher {
     /**registers potential sub dirs too**/
     private void registerToWatchService(Path createdDir) {
         log.info("registering dir and sub dirs of: " + createdDir);
+        try {
+            Files.walkFileTree(createdDir,new SimpleFileVisitor<Path>(){
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    FileVisitResult result =  super.preVisitDirectory(dir, attrs);
+                    try {
+                        WatchKey key = dir.register(watchService, KINDS);// register events to be notified
+                        watchKeys.put(dir, key);
+                    } catch (IOException e) {}
+                    return result;
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        /*
         fileWalker.walkDirs(createdDir, (dir, attrs) -> {
             try {
                 WatchKey key = dir.register(watchService, KINDS);// register events to be notified
                 watchKeys.put(dir, key);
             } catch (IOException e) {}
-        });
+        });*/
         printWatchedDirs(); // debug
     }
 
@@ -167,6 +183,8 @@ public class FileWatcher {
     private final void notifyForChanges() {
         log.info("processing gathered file events...");
         processEvents(events);
+        // free events
+        events.forEach(e -> Pools.free(e) );
         events.clear();
     }
 
@@ -180,10 +198,7 @@ public class FileWatcher {
      * @param events all gathered events
      */
     public void processEvents(Array<FileEvent> events) {
-        events.forEach(e -> {
-            process(e);
-            Pools.free(e);
-        });
+        events.forEach(e -> process(e));
     }
 
     /**

@@ -10,11 +10,10 @@ public class FileWatcherAdapter extends FileWatcher{
      * Call {@link #start()} to start the watchservice & its thread
      *
      * @param dir        to watch
-     * @param fileWalker
      * @throws Exception
      */
-    public FileWatcherAdapter(Path dir, FileTreeWalker fileWalker) throws Exception {
-        super(dir, fileWalker);
+    public FileWatcherAdapter(Path dir) throws Exception {
+        super(dir);
     }
 
     @Override

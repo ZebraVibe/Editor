@@ -55,7 +55,7 @@ public class Editor extends Game {
 
 		// update the asset manager if assets are added post loading
 		if(assets.isFinished() == false){
-			log.debug("updating assets");
+			//log.debug("updating assets");
 			if(assets.update()){
 				//...
 			}

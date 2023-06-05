@@ -54,7 +54,7 @@ public class ScriptManagerOld {
 
         // file watcher
         if(fileWatcher != null)fileWatcher.stop();
-        fileWatcher = new FileWatcherAdapter(srcPath, fileTreeWalker) {
+        fileWatcher = new FileWatcherAdapter(srcPath) {
             @Override
             public void processEvents(Array<FileEvent> events) {
                 super.processEvents(events);
